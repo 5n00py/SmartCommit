@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# gc-smart
+#
+# Description:
+# ------------
+#
+# This script automatically generates a commit message for staged changes in a
+# Git repository. It works by generating a diff of the staged changes, then
+# feeding this diff into the smartcommit.py script. The output from this script
+# is then saved to a file named commit_message.txt. Git has to be configured to
+# use this file as a commit message template, allowing the user to review and
+# edit the auto-generated commit message before finalizing the commit.
+#
+# Prerequisites:
+# --------------
+# - There should be staged changes in the current repository. 
+# - smartcommit.py should be located in the current directory or be available
+#   trough the path variable. 
+# - commit_message.txt is used to store the generated commit message, and will 
+#   be overwritten each time the function is run.
+#   Ensure any important data in this file is backed up. 
+# - commit_message.txt has to be configured as commit template: 
+#   git config --global commit.template commit_message.txt
+
+# Check if there are staged changes
+if git diff --cached --quiet; then
+    echo "No staged changes to commit"
+    exit 1
+fi
+
+# Generate a diff of the staged changes
+git diff --cached > staged_changes.diff
+
+# Generate a commit message and save it to a file
+python3 smartcommit.py staged_changes.diff > commit_message.txt
+
+# Run git commit to start the commit process
+git commit
+
