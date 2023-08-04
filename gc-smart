@@ -44,3 +44,10 @@ read answer
 if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then 
     rm staged_changes.diff
 fi
+
+# Prompt to delete the message file
+echo "Would you like to remove commit_message.txt file? [y/n]"
+read answer
+if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then 
+    rm commit_message.txt
+fi
