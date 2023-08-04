@@ -42,13 +42,11 @@ def generate_commit_message(changes):
         "You are a helpful assistant that generates meaningful commit messages based "
         "on a list of changes. The commit message should include a title summarizing "
         "the changes and bullets '-' for the detailed changes. Each change should be "
-        "on a new line in an imperative style."
+        "on a new line in an imperative style. Please ensure that no line "
+        "exceeds 80 characters in length."
     )
 
-    changes += (
-        "Write me a git commit message based on the following changes. "
-        "Each change should be a bullet point '-'. Use an imperative style: "
-    )
+    changes = ("Write a git commit message for the following changes: ") + changes
 
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
