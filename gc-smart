@@ -38,3 +38,9 @@ python3 smartcommit.py staged_changes.diff > commit_message.txt
 # Run git commit to start the commit process
 git commit
 
+# Prompt to delete the diff file
+echo "Would you like to remove staged_changes.diff file? [y/n]"
+read answer
+if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then 
+    rm staged_changes.diff
+fi
