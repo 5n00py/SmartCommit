@@ -3,7 +3,16 @@
 SmartCommit is a Python script that helps generating meaningful commit
 messages for git projects. It uses the OpenAI's GPT-3 model to summarize your 
 change based on a .diff file and provides a starting point for editing commit
-messages. 
+messages.
+
+In addition to `smartcommit.py`, this project includes a shell script, `gc-smart`, 
+which automates the process of generating commit messages even further. This 
+script uses `smartcommit.py` to generate a commit message for staged changes in 
+a Git repository, then opens this message in Git's commit message editor, 
+allowing for review and modification before committing.
+
+Together, `smartcommit.py` and `gc-smart` aim to streamline your Git workflow 
+by automating and enhancing the process of commit message creation.
 
 ## Prerequisites
 
@@ -11,6 +20,7 @@ To run the smartcommit.py script, you need:
 
 - Python 3.6 or higher
 - An OpenAI API key
+- Git installed on your system
 
 ## Installation and Setup
 
@@ -27,6 +37,10 @@ To run the smartcommit.py script, you need:
     pip install openai
     ```
 
+    If you want to isolate the libraries for this project, create a virtual
+    environment, activate it and run the above within the virtual
+    environment.
+
 3. Set your OpenAI API key as an environment variable:
 
     ```bash
@@ -38,29 +52,49 @@ To run the smartcommit.py script, you need:
     configuration file by adding the above line for example to the .bashrc or
     .zshrc depending on the shell.
 
-4. To make the script available system-wide by just calling `smartcommit` instead 
-of `python /path/to/smartcommit.py`, you have to make it executable and move it 
-to a directory that's on your system's PATH (e.g. /usr/local/bin).
+4. In order to use `gc-smart`, the `commit_message.txt` file has to be set as
+   the commit template in your Git configuration. You can set this using the
+   command:
 
     ```bash
-    chmod +x /path/to/smartcommit.py
-    sudo mv /path/to/smartcommit.py /usr/local/bin/smartcommit
+    git config --global commit.template commit_message.txt
     ```
 
-    As an alternative, you can define an alias `smartcommit` by adding the
-    following to .bashrc or .zshrc:
-
-    ```bash
-    alias smartcommit='python3 /path/to/smartcommit.py'
-    ```
-
-## Usage
-
-Run the script by passing a .diff file as argument:
+5. Add the location of smartcommit.py and gc-smart scripts to your shell's PATH
+   environment variable. This allows you to run these scripts from any
+   directory. To do this, use a command like the following:
 
 ```bash
-python smartcommit.py changes.diff
+export PATH=$PATH:/path/to/your/scripts
 ```
+(Don't forget to replace `/path/to/your/scripts` with the actual path 
+to the directory containing `smartcommit.py` and `gc-smart`.) 
+
+To make this change permanent, you can add this command to your shell's
+config file (like .bashrc or .zshrc).
+
+Alternatively, you can create an alias for smartcommit.py. This provides
+another way to run the script without typing the full path or changing your 
+PATH variable. To create an alias, add the following line to your shell's config 
+file:
+
+```bash
+alias smartcommit='python3 /path/to/smartcommit.py'
+```
+(Don't forget to replace `/path/to/smartcommit.py` with the actual path to the
+script.)
+
+To use the `gc-smart` script, you need to make it executable. You can do this
+with the following command:
+
+```bash
+    chmod +x /path/to/gc-smart
+```
+(Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
+
+After making these changes, you may need to restart your shell or run source
+`~/.bashrc` (or source `~/.zshrc`) to apply the changes. Now, you should be able to
+use smartcommit and gc-smart from any directory.
 
 ## Examples
 
