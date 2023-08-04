@@ -62,6 +62,65 @@ Run the script by passing a .diff file as argument:
 python smartcommit.py changes.diff
 ```
 
+## Examples
+
+Let's suppose we have the following diff file `changes.diff`:
+
+```diff
+--- old_version.py  2021-08-01 12:00:00.000000000 +0100
++++ new_version.py  2021-08-02 12:00:00.000000000 +0100
+@@ -1,9 +1,11 @@
+ def add(a, b):
+-    return a + b
++    return abs(a + b)
+
+-def subtract(a, b):
+-    return a - b
++def subtract_absolute(a, b):
++    return abs(a - b)
+
+ def multiply(a, b):
+-    return a * b
++    if a > 0 and b > 0:
++        return a * b
++    else:
++        raise ValueError("Both inputs must be positive.")
+     
+-def divide(a, b):
+-    if b != 0:
+-        return a / b
+-    else:
+-        print("Error: Division by zero.")
+-        return None
++
++def exponentiate(a, b):
++    return a**b
+```
+
+Running the command
+```bash
+python smartcommit.py changes.diff
+```
+
+Will output a commit message like this:
+
+```bash
+Refactor arithmetic functions
+
+- Change `add` function to return the absolute value of the sum
+- Rename `subtract` function to `subtract_absolute`
+- Modify `multiply` function to raise a ValueError if either input is not positive
+- Add new `exponentiate` function to calculate the exponential power of two numbers
+```
+
+To capture the output of the smartcommit.py script into a text file rather than
+printing it to the terminal, you can use output redirection in the command
+line:
+
+```bash
+python smartcommit.py changes.diff > commit_message.txt
+```
+
 ## Contributing
 
 Contributions are welcome! Please fork this repository and open a pull request
