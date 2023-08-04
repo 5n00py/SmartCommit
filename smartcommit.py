@@ -20,7 +20,7 @@ def get_args():
         "changes",
         metavar="changes",
         type=str,
-        help="Changes as a string or path to a .txt file",
+        help="Changes as a string or path to a .diff file",
     )
 
     return parser.parse_args()
