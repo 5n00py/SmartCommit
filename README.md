@@ -121,6 +121,20 @@ line:
 python smartcommit.py changes.diff > commit_message.txt
 ```
 
+## Commit Message Style
+
+The smartcommit.py script uses a specific style for the commit messages it
+generates. The messages include a summary title, followed by a detailed list of
+changes. Each change is denoted by a bullet point - and written in an
+imperative style. See the example above.
+
+The configuration for this style is hard-coded in the smartcommit.py script. If
+you wish to change the style, feel free to modify the system_prompt and
+changes variables in the script.
+
+As of now, there is no option to select different styles of commit messages
+directly. However, this may be a feature in future versions.
+
 ## Contributing
 
 Contributions are welcome! Please fork this repository and open a pull request
