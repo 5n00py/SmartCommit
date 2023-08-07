@@ -67,24 +67,24 @@ before finalizing it.
    environment variable. This allows you to run it from any
    directory. To do this, use a command like the following:
 
-```bash
-export PATH=$PATH:/path/to/your/scripts
-```
-(Don't forget to replace `/path/to/your/scripts` with the actual path 
-to the directory containing `gc-smart`.) 
+    ```bash
+    export PATH=$PATH:/path/to/your/scripts
+    ```
+    (Don't forget to replace `/path/to/your/scripts` with the actual path 
+    to the directory containing `gc-smart`.) 
 
-To make this change permanent, you can add this command to your shell's
-config file (like `.bashrc` or `.zshrc`).
+    To make this change permanent, you can add this command to your shell's
+    config file (like `.bashrc` or `.zshrc`).
 
-Alternatively, you can create an alias for `gc-smart` providing the full path.
+    Alternatively, you can create an alias for `gc-smart` providing the full path.
 
-To use the `gc-smart` script, you need to make it executable. You can do this
-with the following command:
+    To use the `gc-smart` script, you need to make it executable. You can do this
+    with the following command:
 
-```bash
-    chmod +x /path/to/gc-smart
-```
-(Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
+    ```bash
+        chmod +x /path/to/gc-smart
+    ```
+    (Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
 
 ## Examples
 
