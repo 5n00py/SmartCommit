@@ -17,7 +17,7 @@ before finalizing it.
 ## Prerequisites
 
 - Python 3.6 or higher
-- An OpenAI API key, see: (Where do I find my Secret API Key?)[https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key]
+- An OpenAI API key, see: [Where do I find my Secret API Key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key)
 - Git installed on your system
 - Staged changes in the current repo to be commited
 - `tmp_commit_msg.txt` has to be configured as commit template (see below)
