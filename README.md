@@ -1,26 +1,26 @@
 # SmartCommit
 
-SmartCommit is a Python script that helps generating meaningful commit
-messages for git projects. It uses the OpenAI's GPT-3 model to summarize your 
-change based on a .diff file and provides a starting point for editing commit
-messages.
+After tirelessly working on a project feature, adjusting functions here and
+there, you might find yourself with numerous modified files, facing a final
+task: Commiting your changes in a way that maintains clarity for future
+reference. Diligently scrolling through the diff, attempting to pinpoint and
+acticulate every modification can be a daunting task.
 
-In addition to `smartcommit.py`, this project includes a shell script, `gc-smart`, 
-which automates the process of generating commit messages even further. This 
-script uses `smartcommit.py` to generate a commit message for staged changes in 
-a Git repository, then opens this message in Git's commit message editor, 
-allowing for review and modification before committing.
+This is where `gc-smart` steps in.
 
-Together, `smartcommit.py` and `gc-smart` aim to streamline your Git workflow 
-by automating and enhancing the process of commit message creation.
+The script generates an AI enhanced commit message based on the diffs of your
+staged changes, reducing the manual effort involved in crafting meaningful
+commit descriptions. The generated message is used as a template for the `git
+commit` command, allowing you to review and edit the auto-generated message
+before finalizing it.
 
 ## Prerequisites
 
-To run the smartcommit.py script, you need:
-
 - Python 3.6 or higher
-- An OpenAI API key
+- An OpenAI API key, see: (Where do I find my Secret API Key?)[https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key]
 - Git installed on your system
+- Staged changes in the current repo to be commited
+- `tmp_commit_msg.txt` has to be configured as commit template (see below)
 
 ## Installation and Setup
 
@@ -30,6 +30,9 @@ To run the smartcommit.py script, you need:
     git clone https://github.com/5n00py/SmartCommit.git
     cd SmartCommit
     ```
+
+    Alternatively just copy the files `gc-smart` and `ai_commit_helper.py` to
+    the preferred location.
     
 2. Install the necessary Python libraries:
 
@@ -38,7 +41,7 @@ To run the smartcommit.py script, you need:
     ```
 
     If you want to isolate the libraries for this project, create a virtual
-    environment, activate it and run the above within the virtual
+    environment, activate it and run the python script within the virtual
     environment.
 
 3. Set your OpenAI API key as an environment variable:
@@ -52,37 +55,28 @@ To run the smartcommit.py script, you need:
     configuration file by adding the above line for example to the .bashrc or
     .zshrc depending on the shell.
 
-4. In order to use `gc-smart`, the `commit_message.txt` file has to be set as
+4. In order to use `gc-smart`, the `tmp_commit_msg.txt` file has to be set as
    the commit template in your Git configuration. You can set this using the
    command:
 
     ```bash
-    git config --global commit.template commit_message.txt
+    git config --global commit.template tmp_commit_msg.txt
     ```
 
-5. Add the location of smartcommit.py and gc-smart scripts to your shell's PATH
-   environment variable. This allows you to run these scripts from any
+5. Add the location of the `gc-smart` script to your shell's PATH
+   environment variable. This allows you to run it from any
    directory. To do this, use a command like the following:
 
 ```bash
 export PATH=$PATH:/path/to/your/scripts
 ```
 (Don't forget to replace `/path/to/your/scripts` with the actual path 
-to the directory containing `smartcommit.py` and `gc-smart`.) 
+to the directory containing `gc-smart`.) 
 
 To make this change permanent, you can add this command to your shell's
-config file (like .bashrc or .zshrc).
+config file (like `.bashrc` or `.zshrc`).
 
-Alternatively, you can create an alias for smartcommit.py. This provides
-another way to run the script without typing the full path or changing your 
-PATH variable. To create an alias, add the following line to your shell's config 
-file:
-
-```bash
-alias smartcommit='python3 /path/to/smartcommit.py'
-```
-(Don't forget to replace `/path/to/smartcommit.py` with the actual path to the
-script.)
+Alternatively, you can create an alias for `gc-smart` providing the full path.
 
 To use the `gc-smart` script, you need to make it executable. You can do this
 with the following command:
@@ -91,10 +85,6 @@ with the following command:
     chmod +x /path/to/gc-smart
 ```
 (Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
-
-After making these changes, you may need to restart your shell or run source
-`~/.bashrc` (or source `~/.zshrc`) to apply the changes. Now, you should be able to
-use smartcommit and gc-smart from any directory.
 
 ## Examples
 
@@ -133,7 +123,7 @@ Let's suppose we have the following diff file `changes.diff`:
 
 Running the command
 ```bash
-python smartcommit.py changes.diff
+python ai_commit_helper.py changes.diff
 ```
 
 Will output a commit message like this:
@@ -147,32 +137,22 @@ Refactor arithmetic functions
 - Add new `exponentiate` function to calculate the exponential power of two numbers
 ```
 
-To capture the output of the smartcommit.py script into a text file rather than
-printing it to the terminal, you can use output redirection in the command
-line:
-
-```bash
-python smartcommit.py changes.diff > commit_message.txt
-```
+By running `gc-smart` directly on the above staged changes, the commit message
+will appear as template in your editor ready to be finalized and commited.
 
 ## Commit Message Style
 
-The smartcommit.py script uses a specific style for the commit messages it
+The `ai_commit_helper.py` script uses a specific style for the commit messages it
 generates. The messages include a summary title, followed by a detailed list of
 changes. Each change is denoted by a bullet point - and written in an
 imperative style. See the example above.
 
-The configuration for this style is hard-coded in the smartcommit.py script. If
+The configuration for this style is hard-coded in the script. If
 you wish to change the style, feel free to modify the system_prompt and
 changes variables in the script.
 
 As of now, there is no option to select different styles of commit messages
 directly. However, this may be a feature in future versions.
-
-## Contributing
-
-Contributions are welcome! Please fork this repository and open a pull request
-with your changes.
 
 ## License
 
