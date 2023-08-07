@@ -1,9 +1,33 @@
 #!/usr/bin/env python3
 
+"""
+ai_commit_helper.py
+
+Description:
+------------
+
+This script uses OpenAI's GPT-3 model to automatically generate meaningful git
+commit messages given a set of changes, either as a string or from a .diff file. 
+The program uses the openai model to provide a summary and detailed bullet 
+points of the changes.
+
+Dependencies:
+-------------
+- OpenAI Python SDK
+- Python 3.6 or higher
+
+Usage:
+------
+Run the script passing changes as a string or the path to a .diff file:
+    
+    python3 ai_commit_helper.py "Your changes here"
+    OR
+    python3 ai_commit_helper.py /path/to/changes.diff
+"""
+
 import openai
 import argparse
 import os
-
 
 def set_openai_key():
     if "OPENAI_API_KEY" not in os.environ:
