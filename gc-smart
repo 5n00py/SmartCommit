@@ -27,6 +27,12 @@
 # - tmp_commit_msg.txt has to be configured as commit template: 
 #   git config --global commit.template tmp_commit_msg.txt
 
+# Check if in a Git repository
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    echo "Error: Not inside a Git repository."
+    exit 2
+fi
+
 # Check if there are staged changes
 if git diff --cached --quiet; then
     echo "No staged changes to commit"
