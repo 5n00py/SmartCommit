@@ -13,9 +13,6 @@
 # the user to review and edit the auto-generated commit message before
 # finalizing the commit.
 #
-# Optionally, by passing the --keep-files argument, the staged_changes.diff and
-# tmp_commit_msg.txt files can be retained after the commit process.
-#
 # Prerequisites:
 # --------------
 # - There should be staged changes in the current repository. 
@@ -26,6 +23,30 @@
 #   Ensure any important data in this file is backed up. 
 # - tmp_commit_msg.txt has to be configured as commit template: 
 #   git config --global commit.template tmp_commit_msg.txt
+
+# Options:
+# --------
+# Run "gc-smart --help" to see the options, or just see below ;-)
+
+# Print a detailed help message for the gc-smart script
+print_help() {
+    echo "Usage: gc-smart [OPTION]"
+    echo ""
+    echo "Automatically generate a commit message for staged changes in a Git repository."
+    echo ""
+    echo "Options:"
+    echo "-h, --help          Display this help message."
+    echo "--keep-files        Retain staged_changes.diff and tmp_commit_msg.txt after the commit process."
+    echo "--preview           Preview the AI generated commit message before committing."
+}
+
+# Check for --help or -h options
+for arg in "$@"; do
+    if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]; then
+        print_help
+        exit 0
+    fi
+done
 
 # Check if in a Git repository
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
