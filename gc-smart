@@ -76,7 +76,9 @@ if [ $? -ne 0 ]; then # if git commit failed
         read -p "Do you want to proceed without editing? (y/n) " choice
         case "$choice" in
             y|Y )
-                git commit --no-edit # this will commit without prompting to edit message
+				# Bypass commit.templyte and directly provide a
+				# message from the file
+                git commit -m "$(cat tmp_commit_msg.txt)"
                 ;;
             n|N )
                 echo "Commit aborted."
