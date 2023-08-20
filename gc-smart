@@ -72,8 +72,10 @@ git commit 2> git_error.log # redirect error messages to a log
 if [ $? -ne 0 ]; then # if git commit failed
     if grep -q "you did not edit the message" git_error.log; then
         # Warn the user
-        echo "Warning: It's a good practice to customize commit messages."
-        read -p "Do you want to proceed without editing? (y/n) " choice
+		echo "Warning: You either did not make any changes to the commit" \
+		"message or you exited without saving. It's a good practice to customize" \
+		"commit messages for clarity."
+        read -p "Do you want to proceed without further editing and commit nevertheless? (y/n) " choice
         case "$choice" in
             y|Y )
 				# Bypass commit.templyte and directly provide a
