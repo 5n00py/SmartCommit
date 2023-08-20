@@ -66,6 +66,55 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Generate a commit message and save it to a temp file
 python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
 
+# Check for --preview argument
+PREVIEW=false
+for arg in "$@"; do
+    if [ "$arg" == "--preview" ]; then
+        PREVIEW=true
+        break
+    fi
+done
+
+if $PREVIEW; then
+    regenerate=true
+
+    while $regenerate; do
+        # Preview the auto-generated commit message
+        echo -e "\nGenerated Commit Message:"
+        echo -e "-------------------------\n"
+        cat tmp_commit_msg.txt
+        echo -e "\n----------------------------------------------------------------\n\n"
+
+        # Ask the user if he wants to proceed or regenerate
+        read -p "Options: 
+        1. Continue with commit
+        2. Regenerate commit message 
+        3. Abort 
+
+        Choose [1/2/3]: " choice
+
+        case "$choice" in
+            1)
+                # Continue to commit logic below
+                regenerate=false
+                ;;
+            2)
+                # Regenerate commit message and preview again
+                python3 ai_commit_helper.py staged_changes.diff > tmp_commit_msg.txt
+                ;;
+            3)
+                # Abort
+                echo "Commit aborted."
+                exit 1
+                ;;
+            *)
+                echo "Invalid choice. Commit aborted."
+                exit 1
+                ;;
+        esac
+    done
+fi
+
 # Run git commit to start the commit process
 git commit 2> git_error.log # redirect error messages to a log
 
