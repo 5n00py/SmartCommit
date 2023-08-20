@@ -100,16 +100,19 @@ if $PREVIEW; then
                 ;;
             2)
                 # Regenerate commit message and preview again
-                python3 ai_commit_helper.py staged_changes.diff > tmp_commit_msg.txt
+                python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
+
                 ;;
             3)
                 # Abort
                 echo "Commit aborted."
+				rm -f staged_changes.diff tmp_commit_msg.txt
                 exit 1
                 ;;
             *)
                 echo "Invalid choice. Commit aborted."
-                exit 1
+                rm -f staged_changes.diff tmp_commit_msg.txt
+				exit 1
                 ;;
         esac
     done
