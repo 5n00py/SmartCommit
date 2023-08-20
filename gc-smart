@@ -42,6 +42,12 @@ for arg in "$@"; do
     fi
 done
 
+# Check for the existence of ai_commit_helper.py
+if ! [[ -x "ai_commit_helper.py" ]] && ! command -v ai_commit_helper.py &> /dev/null; then
+    echo "Error: ai_commit_helper.py not found or not executable."
+    exit 2
+fi
+
 # Generate a diff of the staged changes
 git diff --cached > staged_changes.diff
 
