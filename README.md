@@ -10,9 +10,20 @@ This is where `gc-smart` steps in.
 
 The script generates an AI enhanced commit message based on the diffs of your
 staged changes, reducing the manual effort involved in crafting meaningful
-commit descriptions. The generated message is used as a template for the `git
-commit` command, allowing you to review and edit the auto-generated message
-before finalizing it.
+commit descriptions. By default, after running the script within a repository,
+a preview of the AI-generated commit message is displayed. You are then
+presented with the options:
+
+1. To continue with the current commit message.
+2. To regenerate a new commit message.
+3. To abort the commit process altogether.
+
+If you choose to continue, the generated message is used as a template for the 
+`git commit` command, allowing you to review and further customize the message
+if needed before finalizing it.
+
+For quick commits, you can use the `-q` or `--quick` options to skip the
+preview and commit directly with the AI-generated message.
 
 ## Prerequisites
 
