@@ -30,14 +30,15 @@
 #
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
 # Functions
 # ------------------------------------------------------------------------------
 
 # Help Message
 # ------------
 
-# Print a detailed help message for the gc-smart script
 print_help() {
+	# Print a detailed help message for the gc-smart script
     echo "Usage: gc-smart [OPTION]"
     echo ""
     echo "Automatically generate a commit message for staged changes in a Git repository."
@@ -51,24 +52,24 @@ print_help() {
 # Error Handling
 # --------------
 
-# Check if inside a git repo
 check_git_repo() {
+	# Check if inside a git repo and abort script otherwise
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
         echo "Error: Not inside a Git repository."
         exit 2
     fi
 }
 
-# Check if staged changes exist within the repo
 check_staged_changes() {
+	# Check if staged changes exist within the repo and abort otherwise
     if git diff --cached --quiet; then
         echo "No staged changes to commit"
         exit 1
     fi
 }
 
-# Check if ai script exists and is executable
 check_ai_helper() {
+	# Check if ai script exists and is executable and abort otherwise
     if ! [[ -x "ai_commit_helper.py" ]] && ! command -v ai_commit_helper.py &> /dev/null; then
         echo "Error: ai_commit_helper.py not found or not executable."
         exit 2
@@ -76,10 +77,11 @@ check_ai_helper() {
 }
 
 check_commit_template() {
-	# Check if the commit template is set to tmp_commit_msg.txt. If not, inform the user
-	# and give them an option to set it. If the user decides not to set it, the script will abort.
-	# This is essential because the script relies on the template to be set to tmp_commit_msg.txt 
-	# for its AI-generated commit messages.
+	# Check if the commit template is set to tmp_commit_msg.txt. If not, inform
+	# the user and give them an option to set it. If the user decides not to
+	# set it, the script will abort. This is essential because the script
+	# relies on the template to be set to tmp_commit_msg.txt for its
+	# AI-generated commit messages.
     local current_template
     current_template=$(git config --get commit.template)
 
@@ -104,11 +106,44 @@ check_commit_template() {
     fi
 }
 
+handle_git_commit_error() {
+	# Handle specific Git errors encountered during the commit process,
+	# particularly when a user does not modify the default commit message. If
+	# the error log contains a message indicating that the user did not edit
+	# the default commit message, this function will prompt the user with a
+	# warning and provide them with an option to proceed without editing the
+	# message or to abort the commit. Check if the error log contains a
+	# specific message
+    if grep -q "you did not edit the message" git_error.log; then
+        # Warn the user
+		echo "Warning: You either did not make any changes to the commit" \
+		"message or you exited without saving. It's a good practice to customize" \
+		"commit messages for clarity."
+        read -p "Do you want to proceed without further editing and commit nevertheless? (y/n) " choice
+        case "$choice" in
+            y|Y )
+				# Bypass commit.template and directly provide a
+				# message from the file
+                git commit -m "$(cat tmp_commit_msg.txt)"
+                ;;
+            n|N )
+                echo "Commit aborted."
+                ;;
+            * )
+                echo "Invalid choice. Commit aborted."
+                ;;
+        esac
+    else
+        cat git_error.log # Display other errors if there are any
+    fi
+}
+
+
 # Options and Settings
 # --------------------
 
-# Check for --help argument
 check_for_help() {
+	# Check for --help argument and print help message in case
     for arg in "$@"; do
         if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]; then
             print_help
@@ -117,8 +152,8 @@ check_for_help() {
     done
 }
 
-# Check for --keep-files argument and set flag accordingly
 set_keep_files_flag() {
+	# Check for --keep-files argument and set flag accordingly
     KEEP_FILES=false
     for arg in "$@"; do
         if [ "$arg" == "--keep-files" ]; then
@@ -128,8 +163,8 @@ set_keep_files_flag() {
     done
 }
 
-# Check for --quick argument and set preview flag accordingly
 set_preview_flag() {
+	# Check for --quick argument and set preview flag accordingly
     PREVIEW=true
     for arg in "$@"; do
         if [ "$arg" == "--quick" ] || [ "$arg" == "-q" ]; then
@@ -146,6 +181,8 @@ set_directory() {
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 }
 
+# Commit Message Generation and Handling
+# --------------------------------------
 
 generate_commit_message() {
     # Use the ai_commit_helper.py script to process the diff file 
@@ -206,35 +243,8 @@ handle_preview() {
 	done
 }
 
-# Handle errors that may occur during the git commit process
-handle_git_commit_error() {
-    # Check if the error log contains a specific message
-    if grep -q "you did not edit the message" git_error.log; then
-        # Warn the user
-		echo "Warning: You either did not make any changes to the commit" \
-		"message or you exited without saving. It's a good practice to customize" \
-		"commit messages for clarity."
-        read -p "Do you want to proceed without further editing and commit nevertheless? (y/n) " choice
-        case "$choice" in
-            y|Y )
-				# Bypass commit.template and directly provide a
-				# message from the file
-                git commit -m "$(cat tmp_commit_msg.txt)"
-                ;;
-            n|N )
-                echo "Commit aborted."
-                ;;
-            * )
-                echo "Invalid choice. Commit aborted."
-                ;;
-        esac
-    else
-        cat git_error.log # Display other errors if there are any
-    fi
-}
 
-
-
+#-------------------------------------------------------------------------------
 # Main Script Flow
 #-------------------------------------------------------------------------------
 
