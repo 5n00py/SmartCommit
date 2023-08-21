@@ -128,48 +128,53 @@ generate_commit_message() {
 }
 
 handle_preview() {
-	if $PREVIEW; then
-		regenerate=true
+	# Interactively preview the auto-generated commit message.
+	# The user is presented with options to:
+	# 1. Proceed with the current commit message.
+	# 2. Regenerate the commit message and preview it again.
+	# 3. Abort the commit process.
+	# The loop continues until the user decides to proceed with the commit or
+	# aborts.
+	regenerate=true
 
-		while $regenerate; do
-			# Preview the auto-generated commit message
-			echo -e "\nGenerated Commit Message:"
-			echo -e "-------------------------\n"
-			cat tmp_commit_msg.txt
-			echo -e "\n----------------------------------------------------------------\n\n"
+	while $regenerate; do
+		# Preview the auto-generated commit message
+		echo -e "\nGenerated Commit Message:"
+		echo -e "-------------------------\n"
+		cat tmp_commit_msg.txt
+		echo -e "\n----------------------------------------------------------------\n\n"
 
-			# Ask the user if he wants to proceed or regenerate
-			read -p "Options: 
-			1. Continue with commit
-			2. Regenerate commit message 
-			3. Abort 
+		# Ask the user if he wants to proceed or regenerate
+		read -p "Options: 
+		1. Continue with commit
+		2. Regenerate commit message 
+		3. Abort 
 
-			Choose [1/2/3]: " choice
+		Choose [1/2/3]: " choice
 
-			case "$choice" in
-				1)
-					# Continue to commit logic below
-					regenerate=false
-					;;
-				2)
-					# Regenerate commit message and preview again
-					python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
+		case "$choice" in
+			1)
+				# Continue to commit logic below
+				regenerate=false
+				;;
+			2)
+				# Regenerate commit message and preview again
+				python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
 
-					;;
-				3)
-					# Abort
-					echo "Commit aborted."
-					rm -f staged_changes.diff tmp_commit_msg.txt
-					exit 1
-					;;
-				*)
-					echo "Invalid choice. Commit aborted."
-					rm -f staged_changes.diff tmp_commit_msg.txt
-					exit 1
-					;;
-			esac
-		done
-	fi
+				;;
+			3)
+				# Abort
+				echo "Commit aborted."
+				rm -f staged_changes.diff tmp_commit_msg.txt
+				exit 1
+				;;
+			*)
+				echo "Invalid choice. Commit aborted."
+				rm -f staged_changes.diff tmp_commit_msg.txt
+				exit 1
+				;;
+		esac
+	done
 }
 
 # Handle errors that may occur during the git commit process
@@ -220,7 +225,9 @@ git diff --cached > staged_changes.diff
 
 generate_commit_message
 
-handle_preview
+if $PREVIEW; then
+	handle_preview
+fi
 
 # Run git commit to start the commit process
 git commit 2> git_error.log # redirect error messages to a log
