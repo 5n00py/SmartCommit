@@ -27,6 +27,14 @@
 # Options:
 # --------
 # Run "gc-smart --help" to see the options, or just see below ;-)
+#
+# ------------------------------------------------------------------------------
+
+# Functions
+# ------------------------------------------------------------------------------
+
+# Help Message
+# ------------
 
 # Print a detailed help message for the gc-smart script
 print_help() {
@@ -40,111 +48,133 @@ print_help() {
     echo "-q, --quick         Skip the preview of the AI generated commit message and commit directly."
 }
 
-# Check for --help or -h options
-for arg in "$@"; do
-    if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]; then
-        print_help
-        exit 0
+# Error Handling
+# --------------
+
+# Check if inside a git repo
+check_git_repo() {
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        echo "Error: Not inside a Git repository."
+        exit 2
     fi
-done
+}
 
-# Check if in a Git repository
-if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-    echo "Error: Not inside a Git repository."
-    exit 2
-fi
-
-# Check if there are staged changes
-if git diff --cached --quiet; then
-    echo "No staged changes to commit"
-    exit 1
-fi
-
-# Check if the --keep-files argument is passed
-KEEP_FILES=false
-for arg in "$@"; do
-    if [ "$arg" == "--keep-files" ]; then
-        KEEP_FILES=true
-        break
+# Check if staged changes exist within the repo
+check_staged_changes() {
+    if git diff --cached --quiet; then
+        echo "No staged changes to commit"
+        exit 1
     fi
-done
+}
 
-# Check for the existence of ai_commit_helper.py
-if ! [[ -x "ai_commit_helper.py" ]] && ! command -v ai_commit_helper.py &> /dev/null; then
-    echo "Error: ai_commit_helper.py not found or not executable."
-    exit 2
-fi
-
-# Generate a diff of the staged changes
-git diff --cached > staged_changes.diff
-
-# Get the directory of the currently executing script
-# Note, the ai_commit_helper.py script should always be in the same
-# directory as the gc-smart script in that case.
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# Now use that directory to call ai_commit_helper.py
-# Generate a commit message and save it to a temp file
-python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
-
-# By default, set PREVIEW to true
-PREVIEW=true
-
-# Check for --quick or -q argument
-for arg in "$@"; do
-    if [ "$arg" == "--preview" ] || [ "$arg" == "-q" ]; then
-        PREVIEW=false
-        break
+# Check if ai script exists and is executable
+check_ai_helper() {
+    if ! [[ -x "ai_commit_helper.py" ]] && ! command -v ai_commit_helper.py &> /dev/null; then
+        echo "Error: ai_commit_helper.py not found or not executable."
+        exit 2
     fi
-done
+}
 
-if $PREVIEW; then
-    regenerate=true
+# Options and Settings
+# --------------------
 
-    while $regenerate; do
-        # Preview the auto-generated commit message
-        echo -e "\nGenerated Commit Message:"
-        echo -e "-------------------------\n"
-        cat tmp_commit_msg.txt
-        echo -e "\n----------------------------------------------------------------\n\n"
-
-        # Ask the user if he wants to proceed or regenerate
-        read -p "Options: 
-        1. Continue with commit
-        2. Regenerate commit message 
-        3. Abort 
-
-        Choose [1/2/3]: " choice
-
-        case "$choice" in
-            1)
-                # Continue to commit logic below
-                regenerate=false
-                ;;
-            2)
-                # Regenerate commit message and preview again
-                python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
-
-                ;;
-            3)
-                # Abort
-                echo "Commit aborted."
-				rm -f staged_changes.diff tmp_commit_msg.txt
-                exit 1
-                ;;
-            *)
-                echo "Invalid choice. Commit aborted."
-                rm -f staged_changes.diff tmp_commit_msg.txt
-				exit 1
-                ;;
-        esac
+# Check for --help argument
+check_for_help() {
+    for arg in "$@"; do
+        if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]; then
+            print_help
+            exit 0
+        fi
     done
-fi
+}
 
-# Run git commit to start the commit process
-git commit 2> git_error.log # redirect error messages to a log
+# Check for --keep-files argument and set flag accordingly
+set_keep_files_flag() {
+    KEEP_FILES=false
+    for arg in "$@"; do
+        if [ "$arg" == "--keep-files" ]; then
+            KEEP_FILES=true
+            break
+        fi
+    done
+}
 
-if [ $? -ne 0 ]; then # if git commit failed
+# Check for --quick argument and set preview flag accordingly
+set_preview_flag() {
+    PREVIEW=true
+    for arg in "$@"; do
+        if [ "$arg" == "--quick" ] || [ "$arg" == "-q" ]; then
+            PREVIEW=false
+            break
+        fi
+    done
+}
+
+set_directory() {
+    # Determine the directory of the currently executing script.
+    # The result is stored in the DIR variable, which will be used to reference
+    # other scripts or files relative to the directory of this script.
+    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+}
+
+
+generate_commit_message() {
+    # Use the ai_commit_helper.py script to process the diff file 
+	# (staged_changes.diff) and generate an AI-enhanced commit message.
+    # Write the message to tmp_commit_msg.txt.
+    # NOTE: The ai_commit_helper.py script must be located in the same directory
+    # as this executing script for this function to work correctly.
+    python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
+}
+
+handle_preview() {
+	if $PREVIEW; then
+		regenerate=true
+
+		while $regenerate; do
+			# Preview the auto-generated commit message
+			echo -e "\nGenerated Commit Message:"
+			echo -e "-------------------------\n"
+			cat tmp_commit_msg.txt
+			echo -e "\n----------------------------------------------------------------\n\n"
+
+			# Ask the user if he wants to proceed or regenerate
+			read -p "Options: 
+			1. Continue with commit
+			2. Regenerate commit message 
+			3. Abort 
+
+			Choose [1/2/3]: " choice
+
+			case "$choice" in
+				1)
+					# Continue to commit logic below
+					regenerate=false
+					;;
+				2)
+					# Regenerate commit message and preview again
+					python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
+
+					;;
+				3)
+					# Abort
+					echo "Commit aborted."
+					rm -f staged_changes.diff tmp_commit_msg.txt
+					exit 1
+					;;
+				*)
+					echo "Invalid choice. Commit aborted."
+					rm -f staged_changes.diff tmp_commit_msg.txt
+					exit 1
+					;;
+			esac
+		done
+	fi
+}
+
+# Handle errors that may occur during the git commit process
+handle_git_commit_error() {
+    # Check if the error log contains a specific message
     if grep -q "you did not edit the message" git_error.log; then
         # Warn the user
 		echo "Warning: You either did not make any changes to the commit" \
@@ -153,7 +183,7 @@ if [ $? -ne 0 ]; then # if git commit failed
         read -p "Do you want to proceed without further editing and commit nevertheless? (y/n) " choice
         case "$choice" in
             y|Y )
-				# Bypass commit.templyte and directly provide a
+				# Bypass commit.template and directly provide a
 				# message from the file
                 git commit -m "$(cat tmp_commit_msg.txt)"
                 ;;
@@ -167,12 +197,41 @@ if [ $? -ne 0 ]; then # if git commit failed
     else
         cat git_error.log # Display other errors if there are any
     fi
-fi
+}
 
-# Delete error log
-rm git_error.log
+
+
+# Main Script Flow
+#-------------------------------------------------------------------------------
+
+# Argument parsing and settings
+check_for_help "$@"
+set_keep_files_flag "$@"
+set_preview_flag "$@"
+set_directory
+
+check_git_repo
+check_staged_changes
+check_ai_helper
+
+
+# Generate a diff of the staged changes
+git diff --cached > staged_changes.diff
+
+generate_commit_message
+
+handle_preview
+
+# Run git commit to start the commit process
+git commit 2> git_error.log # redirect error messages to a log
+
+# Check the result of the git commit operation
+if [ $? -ne 0 ]; then # if git commit failed
+	handle_git_commit_error
+fi
 
 # Delete files if --keep-files argument is not passed
 if ! $KEEP_FILES; then
+	rm -f git_error.log
     rm -f staged_changes.diff tmp_commit_msg.txt
 fi
