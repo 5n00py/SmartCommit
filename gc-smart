@@ -37,7 +37,7 @@ print_help() {
     echo "Options:"
     echo "-h, --help          Display this help message."
     echo "--keep-files        Retain staged_changes.diff and tmp_commit_msg.txt after the commit process."
-    echo "--preview           Preview the AI generated commit message before committing."
+    echo "-q, --quick         Skip the preview of the AI generated commit message and commit directly."
 }
 
 # Check for --help or -h options
@@ -87,11 +87,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Generate a commit message and save it to a temp file
 python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
 
-# Check for --preview argument
-PREVIEW=false
+# By default, set PREVIEW to true
+PREVIEW=true
+
+# Check for --quick or -q argument
 for arg in "$@"; do
-    if [ "$arg" == "--preview" ]; then
-        PREVIEW=true
+    if [ "$arg" == "--preview" ] || [ "$arg" == "-q" ]; then
+        PREVIEW=false
         break
     fi
 done
