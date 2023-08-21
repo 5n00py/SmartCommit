@@ -75,6 +75,35 @@ check_ai_helper() {
     fi
 }
 
+check_commit_template() {
+	# Check if the commit template is set to tmp_commit_msg.txt. If not, inform the user
+	# and give them an option to set it. If the user decides not to set it, the script will abort.
+	# This is essential because the script relies on the template to be set to tmp_commit_msg.txt 
+	# for its AI-generated commit messages.
+    local current_template
+    current_template=$(git config --get commit.template)
+
+    # Check if the current commit template is set to tmp_commit_msg.txt
+    if [[ "$current_template" != *'tmp_commit_msg.txt' ]]; then
+        echo "The 'gc-smart' script requires 'tmp_commit_msg.txt' as the commit template to function correctly."
+        
+        # Ask if user wants to set tmp_commit_msg.txt as the commit template
+        read -p "Would you like to set tmp_commit_msg.txt as your commit template? (y/n) " choice
+        case "$choice" in
+            y|Y )
+                git config --global commit.template tmp_commit_msg.txt
+                echo "tmp_commit_msg.txt is now set as your commit template."
+                echo "Please re-run the gc-smart script to make the change effective!"
+                exit 1
+                ;;
+            n|N|* )
+                echo "Commit template not set to required tmp_commit_msg.txt. Script will abort."
+                exit 1
+                ;;
+        esac
+    fi
+}
+
 # Options and Settings
 # --------------------
 
@@ -218,6 +247,7 @@ set_directory
 check_git_repo
 check_staged_changes
 check_ai_helper
+check_commit_template
 
 
 # Generate a diff of the staged changes
