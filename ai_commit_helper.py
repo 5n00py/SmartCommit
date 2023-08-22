@@ -47,6 +47,12 @@ def get_args():
         help="Changes as a string or path to a .diff file",
     )
 
+    parser.add_argument(
+        "-i", "--instruction",
+        default="",
+        help="Additional instruction to guide the AI's response"
+    )
+
     return parser.parse_args()
 
 
@@ -61,7 +67,7 @@ def get_changes(args):
         return args.changes
 
 
-def generate_commit_message(changes):
+def generate_commit_message(changes, instruction):
     system_prompt = (
         "You are a helpful assistant that generates meaningful commit messages based "
         "on a list of changes. The commit message should include a title summarizing "
@@ -70,14 +76,20 @@ def generate_commit_message(changes):
         "exceeds 80 characters in length."
     )
 
-    changes = ("Write a git commit message for the following changes: ") + changes
+    changes = "Write a git commit message for the following changes: " + changes
+
+    # Add the instruction to the AI messages
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": changes},
+    ]
+
+    if instruction:
+        messages.append({"role": "user", "content": instruction})
 
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": changes},
-        ],  # type: ignore
+        messages=messages,  # type: ignore
     )
 
     commit_message = response.choices[0].message["content"]  # type: ignore
@@ -91,7 +103,7 @@ def main():
 
     changes = get_changes(args)
 
-    commit_message = generate_commit_message(changes)
+    commit_message = generate_commit_message(changes, args.instruction)
 
     print(commit_message)
 
