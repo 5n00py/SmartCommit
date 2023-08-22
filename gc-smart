@@ -26,9 +26,16 @@
 
 # Options:
 # --------
-# Run "gc-smart --help" to see the options, or just see below ;-)
+# Run "gc-smart --help" to see the options, or just see below print_help... ;-)
 #
 # ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Global Variables
+# ------------------------------------------------------------------------------
+
+INSTRUCTION=""
+
 
 # ------------------------------------------------------------------------------
 # Functions
@@ -45,6 +52,7 @@ print_help() {
     echo ""
     echo "Options:"
     echo "-h, --help          Display this help message."
+	echo "-i, --instruction   Provide an instruction for the AI to guide commit message generation."
     echo "--keep-files        Retain staged_changes.diff and tmp_commit_msg.txt after the commit process."
     echo "-q, --quick         Skip the preview of the AI generated commit message and commit directly."
 }
@@ -181,6 +189,27 @@ set_directory() {
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 }
 
+set_instruction() {
+	# Check for the presence of the "-i" or "--instruction" option. If found,
+	# set the INSTRUCTION global variable to the value immediately following
+	# the option. This value is later passed to the ai_commit_helper.py script
+	# to guide the AI in generating commit messages. If the option is not found
+	# or if no value is provided after the option, the function leaves the
+	# INSTRUCTION variable empty.
+    for idx in "${!ARGS[@]}"; do
+        if [ "${ARGS[$idx]}" == "-i" ] || [ "${ARGS[$idx]}" == "--instruction" ]; then
+            # Check if a potential instruction follows the flag
+            if [ -n "${ARGS[$idx+1]-}" ] && [[ "${ARGS[$idx+1]}" != -* ]]; then
+                INSTRUCTION="${ARGS[$idx+1]}"
+                break
+            else
+                echo "Error: The -i or --instruction option requires an argument."
+                exit 1
+            fi
+        fi
+    done
+}
+
 # Commit Message Generation and Handling
 # --------------------------------------
 
@@ -190,59 +219,71 @@ generate_commit_message() {
     # Write the message to tmp_commit_msg.txt.
     # NOTE: The ai_commit_helper.py script must be located in the same directory
     # as this executing script for this function to work correctly.
-    python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
+	
+	# If an instruction is provided, pass it to the AI script
+    if [ -n "$INSTRUCTION" ]; then
+        python3 "$DIR/ai_commit_helper.py" staged_changes.diff -i "$INSTRUCTION" > tmp_commit_msg.txt
+    else
+        python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
+    fi
 }
+
 
 handle_preview() {
-	# Interactively preview the auto-generated commit message.
-	# The user is presented with options to:
-	# 1. Proceed with the current commit message.
-	# 2. Regenerate the commit message and preview it again.
-	# 3. Abort the commit process.
-	# The loop continues until the user decides to proceed with the commit or
-	# aborts.
-	regenerate=true
+    # Interactively preview the auto-generated commit message.
+    # The user is presented with options to:
+    # 1. Proceed with the current commit message.
+    # 2. Regenerate commit message without instruction.
+    # 3. Regenerate commit message with an instruction.
+    # 4. Abort the commit process.
+    # The loop continues until the user decides to proceed with the commit or
+    # aborts.
+    regenerate=true
 
-	while $regenerate; do
-		# Preview the auto-generated commit message
-		echo -e "\nGenerated Commit Message:"
-		echo -e "-------------------------\n"
-		cat tmp_commit_msg.txt
-		echo -e "\n----------------------------------------------------------------\n\n"
+    while $regenerate; do
+        # Preview the auto-generated commit message
+        echo -e "\nGenerated Commit Message:"
+        echo -e "-------------------------\n"
+        cat tmp_commit_msg.txt
+        echo -e "\n----------------------------------------------------------------\n\n"
 
-		# Ask the user if he wants to proceed or regenerate
-		read -p "Options: 
-		1. Continue with commit
-		2. Regenerate commit message 
-		3. Abort 
+        # Ask the user if he wants to proceed or regenerate
+        read -p "Options: 
+        1. Continue with commit
+        2. Regenerate commit message without instruction
+        3. Regenerate commit message with an instruction
+        4. Abort 
 
-		Choose [1/2/3]: " choice
+        Choose [1/2/3/4]: " choice
 
-		case "$choice" in
-			1)
-				# Continue to commit logic below
-				regenerate=false
-				;;
-			2)
-				# Regenerate commit message and preview again
-				python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
-
-				;;
-			3)
-				# Abort
-				echo "Commit aborted."
-				rm -f staged_changes.diff tmp_commit_msg.txt
-				exit 1
-				;;
-			*)
-				echo "Invalid choice. Commit aborted."
-				rm -f staged_changes.diff tmp_commit_msg.txt
-				exit 1
-				;;
-		esac
-	done
+        case "$choice" in
+            1)
+                # Continue to commit logic...
+                regenerate=false
+                ;;
+            2)
+                # Regenerate commit message without instruction and preview again
+                python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
+                ;;
+            3)
+                # Regenerate commit message with an instruction
+                read -p "Provide a guiding instruction for the AI: " INSTRUCTION
+                python3 "$DIR/ai_commit_helper.py" -i "$INSTRUCTION" staged_changes.diff > tmp_commit_msg.txt
+                ;;
+            4)
+                # Abort
+                echo "Commit aborted."
+                rm -f staged_changes.diff tmp_commit_msg.txt
+                exit 1
+                ;;
+            *)
+                echo "Invalid choice. Commit aborted."
+                rm -f staged_changes.diff tmp_commit_msg.txt
+                exit 1
+                ;;
+        esac
+    done
 }
-
 
 #-------------------------------------------------------------------------------
 # Main Script Flow
@@ -253,6 +294,7 @@ check_for_help "$@"
 set_keep_files_flag "$@"
 set_preview_flag "$@"
 set_directory
+set_instruction "$@"
 
 check_git_repo
 check_staged_changes
