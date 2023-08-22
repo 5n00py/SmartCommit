@@ -6,7 +6,7 @@
 #
 # Filename  : gc-smart
 # Author(s) : David Schmid (david.schmid@mailbox.org)
-# Version   : 0.1.0
+# Version   : 0.1.1
 #
 # ------------------------------ Description -----------------------------------
 # Leverages ai_commit_helper.py to auto-generate commit messages for staged
@@ -233,7 +233,8 @@ handle_preview() {
     # 1. Proceed with the current commit message.
     # 2. Regenerate commit message without instruction.
     # 3. Regenerate commit message with an instruction.
-    # 4. Abort the commit process.
+	# 4. View staged changes
+    # 5. Abort the commit process.
     # The loop continues until the user decides to proceed with the commit or
     # aborts.
     regenerate=true
@@ -250,9 +251,10 @@ handle_preview() {
         1. Continue with commit
         2. Regenerate commit message without instruction
         3. Regenerate commit message with an instruction
-        4. Abort 
+        4. View staged changes
+        5. Abort 
 
-        Choose [1/2/3/4]: " choice
+        Choose [1/2/3/4/5]: " choice
 
         case "$choice" in
             1)
@@ -268,7 +270,11 @@ handle_preview() {
                 read -p "Provide a guiding instruction for the AI: " INSTRUCTION
                 python3 "$DIR/ai_commit_helper.py" -i "$INSTRUCTION" staged_changes.diff > tmp_commit_msg.txt
                 ;;
-            4)
+			4)
+                # View staged changes
+                less staged_changes.diff
+                ;;
+            5)
                 # Abort
                 echo "Commit aborted."
                 rm -f staged_changes.diff tmp_commit_msg.txt
