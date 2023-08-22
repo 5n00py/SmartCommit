@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
 
 """
-ai_commit_helper.py
+================================================================================
+                               ai_commit_helper.py
+================================================================================
 
-Description:
-------------
+Author(s) : David Schmid (david.schmid@mailbox.org)
+Version   : 0.1.0
 
-This script uses OpenAI's GPT-3 model to automatically generate meaningful git
-commit messages given a set of changes, either as a string or from a .diff file. 
-The program uses the openai model to provide a summary and detailed bullet 
-points of the changes.
+------------------------------ Description -----------------------------------
+Utilizes OpenAI's GPT-3 model to auto-generate git commit messages from
+provided changes. Accepts changes as string input or from a .diff file, then
+employs GPT-3 to offer a summarized description and detailed bullet points.
 
-Dependencies:
--------------
+------------------------------ Dependencies -----------------------------------
 - OpenAI Python SDK
 - Python 3.6 or higher
 
-Usage:
-------
-Run the script passing changes as a string or the path to a .diff file:
-    
+--------------------------------- Usage --------------------------------------
+Execute the script with changes in string format or by indicating a .diff file:
+
     python3 ai_commit_helper.py "Your changes here"
     OR
     python3 ai_commit_helper.py /path/to/changes.diff
+
+================================================================================
 """
 
 import openai
