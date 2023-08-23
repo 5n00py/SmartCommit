@@ -28,12 +28,6 @@ For quick commits, you can use the `-q` or `--quick` options to skip the
 preview and commit directly with the AI-generated message. To see all the
 possible options, run `gc-smart --help`.
 
-## Important Note
-
-For the script to function correctly, you have to run `gc-smart` from the root 
-directory of your project. I am aware of this limitation and working on an 
-update to provide more flexibility in the future. Stay tuned ;-)
-
 ## Prerequisites
 
 - Python 3.6 or higher

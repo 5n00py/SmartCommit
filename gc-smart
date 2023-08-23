@@ -32,6 +32,7 @@
 # ------------------------------------------------------------------------------
 
 DIR="" # The dir of the currently executing script
+GIT_ROOT="" # The root directory of the current Git repository
 INSTRUCTION="" # Additional instructions for enhancing the AI commit message
 KEEP_FILES=false # Flag to retain intermediate files after the commit process
 PREVIEW=true # Flag to preview the AI-generated commit message to the user
@@ -53,7 +54,7 @@ print_help() {
     echo "Options:"
     echo "-h, --help          Display this help message."
     echo "-i, --instruction   Provide an instruction for the AI to guide commit message generation."
-    echo "--keep-files        Retain staged_changes.diff and tmp_commit_msg.txt after the commit process."
+    echo "--keep-files        Retain intermediate files after the commit process in the root directory."
     echo "-q, --quick         Skip the preview of the AI generated commit message and commit directly."
 }
 
@@ -121,7 +122,7 @@ handle_git_commit_error() {
     # warning and provide them with an option to proceed without editing the
     # message or to abort the commit. Check if the error log contains a
     # specific message
-    if grep -q "you did not edit the message" git_error.log; then
+    if grep -q "you did not edit the message" "$GIT_ROOT/git_error.log"; then
         # Warn the user
         echo "Warning: You either did not make any changes to the commit" \
         "message or you exited without saving. It's a good practice to customize" \
@@ -131,7 +132,7 @@ handle_git_commit_error() {
             y|Y )
                 # Bypass commit.template and directly provide a
                 # message from the file
-                git commit -m "$(cat tmp_commit_msg.txt)"
+                git commit -m "$(cat "$GIT_ROOT/tmp_commit_msg.txt")"
                 ;;
             n|N )
                 echo "Commit aborted."
@@ -141,7 +142,7 @@ handle_git_commit_error() {
                 ;;
         esac
     else
-        cat git_error.log # Display other errors if there are any
+        cat "$GIT_ROOT/git_error.log" # Display other errors if there are any
     fi
 }
 
@@ -179,11 +180,11 @@ set_preview_flag() {
     done
 }
 
-set_directory() {
-    # Determine the directory of the currently executing script.
-    # The result is stored in the DIR variable, which will be used to reference
-    # other scripts or files relative to the directory of this script.
+set_directories() {
+    # Determine the directory of the currently executing script and the Git
+	# root directory. Store them in the DIR and GIT_ROOT variables.
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	GIT_ROOT=$(git rev-parse --show-toplevel)
 }
 
 set_instruction() {
@@ -217,9 +218,9 @@ generate_commit_message() {
     # NOTE: The ai_commit_helper.py script must be located in the same directory
     # as this executing script for this function to work correctly.
     if [ -n "$INSTRUCTION" ]; then
-        python3 "$DIR/ai_commit_helper.py" staged_changes.diff -i "$INSTRUCTION" > tmp_commit_msg.txt
+        python3 "$DIR/ai_commit_helper.py" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" > "$GIT_ROOT/tmp_commit_msg.txt"
     else
-        python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
+        python3 "$DIR/ai_commit_helper.py" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
     fi
 }
 
@@ -240,7 +241,7 @@ handle_preview() {
         # Preview the auto-generated commit message
         echo -e "\nGenerated Commit Message:"
         echo -e "-------------------------\n"
-        cat tmp_commit_msg.txt
+        cat "$GIT_ROOT/tmp_commit_msg.txt"
         echo -e "\n----------------------------------------------------------------\n\n"
 
         # Ask the user if he wants to proceed or regenerate
@@ -260,26 +261,26 @@ handle_preview() {
                 ;;
             2)
                 # Regenerate commit message without instruction and preview again
-                python3 "$DIR/ai_commit_helper.py" staged_changes.diff > tmp_commit_msg.txt
+                python3 "$DIR/ai_commit_helper.py" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
                 ;;
             3)
                 # Regenerate commit message with an instruction
                 read -p "Provide a guiding instruction for the AI: " INSTRUCTION
-                python3 "$DIR/ai_commit_helper.py" -i "$INSTRUCTION" staged_changes.diff > tmp_commit_msg.txt
+                python3 "$DIR/ai_commit_helper.py" -i "$INSTRUCTION" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
                 ;;
 			4)
                 # View staged changes
-                less staged_changes.diff
+                less "$GIT_ROOT/staged_changes.diff"
                 ;;
             5)
                 # Abort
                 echo "Commit aborted."
-                rm -f staged_changes.diff tmp_commit_msg.txt
+                rm -f "$GIT_ROOT/staged_changes.diff" "$GIT_ROOT/tmp_commit_msg.txt"
                 exit 1
                 ;;
             *)
                 echo "Invalid choice. Commit aborted."
-                rm -f staged_changes.diff tmp_commit_msg.txt
+                rm -f "$GIT_ROOT/staged_changes.diff" "$GIT_ROOT/tmp_commit_msg.txt"
                 exit 1
                 ;;
         esac
@@ -294,7 +295,7 @@ handle_preview() {
 check_for_help "$@"
 set_keep_files_flag "$@"
 set_preview_flag "$@"
-set_directory
+set_directories
 set_instruction "$@"
 
 check_git_repo
@@ -304,7 +305,7 @@ check_commit_template
 
 
 # Generate a diff of the staged changes
-git diff --cached > staged_changes.diff
+git diff --cached > "$GIT_ROOT/staged_changes.diff"
 
 generate_commit_message
 
@@ -313,7 +314,7 @@ if $PREVIEW; then
 fi
 
 # Run git commit to start the commit process
-git commit 2> git_error.log # redirect error messages to a log
+git commit 2> "$GIT_ROOT/git_error.log" # redirect error messages to a log
 
 # Check the result of the git commit operation
 if [ $? -ne 0 ]; then # if git commit failed
@@ -322,6 +323,7 @@ fi
 
 # Delete files if --keep-files argument is not passed
 if ! $KEEP_FILES; then
-    rm -f git_error.log
-    rm -f staged_changes.diff tmp_commit_msg.txt
+    rm -f "$GIT_ROOT/git_error.log"
+    rm -f "$GIT_ROOT/staged_changes.diff" 
+	rm -f "$GIT_ROOT/tmp_commit_msg.txt"
 fi
