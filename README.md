@@ -95,11 +95,11 @@ possible options, run `gc-smart --help`.
 
     Alternatively, you can create an alias for `gc-smart` providing the full path.
 
-    To use the `gc-smart` script, you need to make it executable. You can do this
-    with the following command:
+6. Make the `gc-smart` and `ai_commit_helper.py` script executable:
 
     ```bash
         chmod +x /path/to/gc-smart
+        chmod +x /path/to/ai_commit_helper.py
     ```
     (Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
 

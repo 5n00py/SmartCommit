@@ -52,7 +52,7 @@ print_help() {
     echo ""
     echo "Options:"
     echo "-h, --help          Display this help message."
-	echo "-i, --instruction   Provide an instruction for the AI to guide commit message generation."
+    echo "-i, --instruction   Provide an instruction for the AI to guide commit message generation."
     echo "--keep-files        Retain staged_changes.diff and tmp_commit_msg.txt after the commit process."
     echo "-q, --quick         Skip the preview of the AI generated commit message and commit directly."
 }
@@ -61,7 +61,7 @@ print_help() {
 # ------------------------------------------------------------------------------
 
 check_git_repo() {
-	# Check if inside a git repo and abort script otherwise
+    # Check if inside a git repo and abort script otherwise
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
         echo "Error: Not inside a Git repository."
         exit 2
@@ -69,7 +69,7 @@ check_git_repo() {
 }
 
 check_staged_changes() {
-	# Check if staged changes exist within the repo and abort otherwise
+    # Check if staged changes exist within the repo and abort otherwise
     if git diff --cached --quiet; then
         echo "No staged changes to commit"
         exit 1
@@ -77,7 +77,7 @@ check_staged_changes() {
 }
 
 check_ai_helper() {
-	# Check if ai script exists and is executable and abort otherwise
+    # Check if ai script exists and is executable and abort otherwise
     if ! [[ -x "ai_commit_helper.py" ]] && ! command -v ai_commit_helper.py &> /dev/null; then
         echo "Error: ai_commit_helper.py not found or not executable."
         exit 2
@@ -85,18 +85,17 @@ check_ai_helper() {
 }
 
 check_commit_template() {
-	# Check if the commit template is set to tmp_commit_msg.txt. If not, inform
-	# the user and give them an option to set it. If the user decides not to
-	# set it, the script will abort. This is essential because the script
-	# relies on the template to be set to tmp_commit_msg.txt for its
-	# AI-generated commit messages.
+    # Check if the commit template is set to tmp_commit_msg.txt. If not, inform
+    # the user and give them an option to set it. If the user decides not to
+    # set it, the script will abort. This is essential because the script
+    # relies on the template to be set to tmp_commit_msg.txt for its
+    # AI-generated commit messages.
     local current_template
     current_template=$(git config --get commit.template)
 
     # Check if the current commit template is set to tmp_commit_msg.txt
     if [[ "$current_template" != *'tmp_commit_msg.txt' ]]; then
         echo "The 'gc-smart' script requires 'tmp_commit_msg.txt' as the commit template to function correctly."
-        
         # Ask if user wants to set tmp_commit_msg.txt as the commit template
         read -p "Would you like to set tmp_commit_msg.txt as your commit template? (y/n) " choice
         case "$choice" in
@@ -115,23 +114,23 @@ check_commit_template() {
 }
 
 handle_git_commit_error() {
-	# Handle specific Git errors encountered during the commit process,
-	# particularly when a user does not modify the default commit message. If
-	# the error log contains a message indicating that the user did not edit
-	# the default commit message, this function will prompt the user with a
-	# warning and provide them with an option to proceed without editing the
-	# message or to abort the commit. Check if the error log contains a
-	# specific message
+    # Handle specific Git errors encountered during the commit process,
+    # particularly when a user does not modify the default commit message. If
+    # the error log contains a message indicating that the user did not edit
+    # the default commit message, this function will prompt the user with a
+    # warning and provide them with an option to proceed without editing the
+    # message or to abort the commit. Check if the error log contains a
+    # specific message
     if grep -q "you did not edit the message" git_error.log; then
         # Warn the user
-		echo "Warning: You either did not make any changes to the commit" \
-		"message or you exited without saving. It's a good practice to customize" \
-		"commit messages for clarity."
+        echo "Warning: You either did not make any changes to the commit" \
+        "message or you exited without saving. It's a good practice to customize" \
+        "commit messages for clarity."
         read -p "Do you want to proceed without further editing and commit nevertheless? (y/n) " choice
         case "$choice" in
             y|Y )
-				# Bypass commit.template and directly provide a
-				# message from the file
+                # Bypass commit.template and directly provide a
+                # message from the file
                 git commit -m "$(cat tmp_commit_msg.txt)"
                 ;;
             n|N )
@@ -151,7 +150,7 @@ handle_git_commit_error() {
 # ------------------------------------------------------------------------------
 
 check_for_help() {
-	# Check for --help argument and print help message in case
+    # Check for --help argument and print help message in case
     for arg in "$@"; do
         if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]; then
             print_help
@@ -161,7 +160,7 @@ check_for_help() {
 }
 
 set_keep_files_flag() {
-	# Check for --keep-files argument and set flag accordingly
+    # Check for --keep-files argument and set flag accordingly
     for arg in "$@"; do
         if [ "$arg" == "--keep-files" ]; then
             KEEP_FILES=true
@@ -171,7 +170,7 @@ set_keep_files_flag() {
 }
 
 set_preview_flag() {
-	# Check for --quick argument and set preview flag accordingly
+    # Check for --quick argument and set preview flag accordingly
     for arg in "$@"; do
         if [ "$arg" == "--quick" ] || [ "$arg" == "-q" ]; then
             PREVIEW=false
@@ -188,12 +187,12 @@ set_directory() {
 }
 
 set_instruction() {
-	# Check for the presence of the "-i" or "--instruction" option. If found,
-	# set the INSTRUCTION global variable to the value immediately following
-	# the option. This value is later passed to the ai_commit_helper.py script
-	# to guide the AI in generating commit messages. If the option is not found
-	# or if no value is provided after the option, the function leaves the
-	# INSTRUCTION variable empty.
+    # Check for the presence of the "-i" or "--instruction" option. If found,
+    # set the INSTRUCTION global variable to the value immediately following
+    # the option. This value is later passed to the ai_commit_helper.py script
+    # to guide the AI in generating commit messages. If the option is not found
+    # or if no value is provided after the option, the function leaves the
+    # INSTRUCTION variable empty.
     for idx in "${!ARGS[@]}"; do
         if [ "${ARGS[$idx]}" == "-i" ] || [ "${ARGS[$idx]}" == "--instruction" ]; then
             # Check if a potential instruction follows the flag
@@ -213,12 +212,10 @@ set_instruction() {
 
 generate_commit_message() {
     # Use the ai_commit_helper.py script to process the diff file 
-	# (staged_changes.diff) and generate an AI-enhanced commit message.
+    # (staged_changes.diff) and generate an AI-enhanced commit message.
     # Write the message to tmp_commit_msg.txt.
     # NOTE: The ai_commit_helper.py script must be located in the same directory
     # as this executing script for this function to work correctly.
-	
-	# If an instruction is provided, pass it to the AI script
     if [ -n "$INSTRUCTION" ]; then
         python3 "$DIR/ai_commit_helper.py" staged_changes.diff -i "$INSTRUCTION" > tmp_commit_msg.txt
     else
@@ -233,7 +230,7 @@ handle_preview() {
     # 1. Proceed with the current commit message.
     # 2. Regenerate commit message without instruction.
     # 3. Regenerate commit message with an instruction.
-	# 4. View staged changes
+    # 4. View staged changes
     # 5. Abort the commit process.
     # The loop continues until the user decides to proceed with the commit or
     # aborts.
@@ -325,6 +322,6 @@ fi
 
 # Delete files if --keep-files argument is not passed
 if ! $KEEP_FILES; then
-	rm -f git_error.log
+    rm -f git_error.log
     rm -f staged_changes.diff tmp_commit_msg.txt
 fi
