@@ -16,14 +16,17 @@ presented with the options:
 
 1. To continue with the current commit message.
 2. To regenerate a new commit message.
-3. To abort the commit process altogether.
+3. To regenerate a new commit message by adding further instruction.
+4. To view the staged changes.
+5. To abort the commit process altogether.
 
 If you choose to continue, the generated message is used as a template for the 
 `git commit` command, allowing you to review and further customize the message
 if needed before finalizing it.
 
 For quick commits, you can use the `-q` or `--quick` options to skip the
-preview and commit directly with the AI-generated message.
+preview and commit directly with the AI-generated message. To see all the
+possible options, run `gc-smart --help`.
 
 ## Prerequisites
 
@@ -74,6 +77,9 @@ preview and commit directly with the AI-generated message.
     git config --global commit.template tmp_commit_msg.txt
     ```
 
+    Note: If you skip this step, the first time you run `gc-smart`, the script
+    will present you with a prompt to set this up for you.
+
 5. Add the location of the `gc-smart` script to your shell's PATH
    environment variable. This allows you to run it from any
    directory. To do this, use a command like the following:
@@ -99,7 +105,10 @@ preview and commit directly with the AI-generated message.
 
 ## Examples
 
-Let's suppose we have the following diff file `changes.diff`:
+Let's assume you've made some code changes in your Git repository and have
+staged them ready to commit.
+
+For illustration, suppose the staged changes are as follows:
 
 ```diff
 --- old_version.py  2021-08-01 12:00:00.000000000 +0100
@@ -132,12 +141,9 @@ Let's suppose we have the following diff file `changes.diff`:
 +    return a**b
 ```
 
-Running the command
-```bash
-python ai_commit_helper.py changes.diff
-```
-
-Will output a commit message like this:
+When you run the `gc-smart` script from within the repository, you'll be
+presented with an interactive preview of the auto-generated commit message,
+which might look something like this:
 
 ```bash
 Refactor arithmetic functions
@@ -148,8 +154,10 @@ Refactor arithmetic functions
 - Add new `exponentiate` function to calculate the exponential power of two numbers
 ```
 
-By running `gc-smart` directly on the above staged changes, the commit message
-will appear as template in your editor ready to be finalized and commited.
+After reviewing the proposed commit message, if you decide to proceed, this
+message will appear as a template in your default Git editor. You can then
+finalize the message or make any necessary modifications before committing the
+changes to your repository.
 
 ## Commit Message Style
 
