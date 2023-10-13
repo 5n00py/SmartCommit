@@ -32,6 +32,7 @@
 # ------------------------------------------------------------------------------
 
 DIR="" # The dir of the currently executing script
+GIT_CMD="git" # The command for Git operations, default is 'git'
 GIT_ROOT="" # The root directory of the current Git repository
 INSTRUCTION="" # Additional instructions for enhancing the AI commit message
 KEEP_FILES=false # Flag to retain intermediate files after the commit process
@@ -56,14 +57,16 @@ print_help() {
     echo "-i, --instruction   Provide an instruction for the AI to guide commit message generation."
     echo "--keep-files        Retain intermediate files after the commit process in the root directory."
     echo "-q, --quick         Skip the preview of the AI generated commit message and commit directly."
+	echo "--cmd               Specify a custom command for Git operations. Default is 'git'."
+
 }
 
 # Error Handling
 # ------------------------------------------------------------------------------
 
 check_git_repo() {
-    # Check if inside a git repo and abort script otherwise
-    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    # Check if inside a $GIT_CMDgit repo and abort script otherwise
+    if ! $GIT_CMD rev-parse --is-inside-work-tree > /dev/null 2>&1; then
         echo "Error: Not inside a Git repository."
         exit 2
     fi
@@ -71,7 +74,7 @@ check_git_repo() {
 
 check_staged_changes() {
     # Check if staged changes exist within the repo and abort otherwise
-    if git diff --cached --quiet; then
+    if $GIT_CMD diff --cached --quiet; then
         echo "No staged changes to commit"
         exit 1
     fi
@@ -132,7 +135,7 @@ handle_git_commit_error() {
             y|Y )
                 # Bypass commit.template and directly provide a
                 # message from the file
-                git commit -m "$(cat "$GIT_ROOT/tmp_commit_msg.txt")"
+                 $GIT_CMD commit -m "$(cat "$GIT_ROOT/tmp_commit_msg.txt")"
                 ;;
             n|N )
                 echo "Commit aborted."
@@ -184,7 +187,7 @@ set_directories() {
     # Determine the directory of the currently executing script and the Git
 	# root directory. Store them in the DIR and GIT_ROOT variables.
     DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-	GIT_ROOT=$(git rev-parse --show-toplevel)
+	GIT_ROOT=$(${GIT_CMD} rev-parse --show-toplevel)
 }
 
 set_instruction() {
@@ -207,6 +210,28 @@ set_instruction() {
         fi
     done
 }
+
+set_git_cmd() {
+    # Parse the cl arguments to detect a possible "--cmd" flag and when
+	# detected check if there is a valid command provided after the flag. If a
+	# command is found, set the GIT_CMD variable to that value, allowing the
+	# script to usa a custom git command. If the flag is present but no command
+	# is provided or invalid, print an error message and exit the script.
+    local args=("$@")
+    for idx in "${!args[@]}"; do
+        if [ "${args[$idx]}" == "--cmd" ]; then
+            # Check if a potential command follows the flag
+            if [ -n "${args[$idx+1]-}" ] && [[ "${args[$idx+1]}" != -* ]]; then
+                GIT_CMD="${args[$idx+1]}"
+                break
+            else
+                echo "Error: The --cmd option requires an argument."
+                exit 1
+            fi
+        fi
+    done
+}
+
 
 # Commit Message Generation and Handling
 # ------------------------------------------------------------------------------
@@ -295,17 +320,20 @@ handle_preview() {
 check_for_help "$@"
 set_keep_files_flag "$@"
 set_preview_flag "$@"
-set_directories
 set_instruction "$@"
+set_git_cmd "$@"
+set_directories
 
-check_git_repo
+if [[ "$GIT_CMD" == "git" ]]; then
+    # Only check if the repository is a valid Git repository if GIT_CMD is 'git'
+    check_git_repo
+fi
 check_staged_changes
 check_ai_helper
 check_commit_template
 
-
 # Generate a diff of the staged changes
-git diff --cached > "$GIT_ROOT/staged_changes.diff"
+$GIT_CMD diff --cached > "$GIT_ROOT/staged_changes.diff"
 
 generate_commit_message
 
@@ -314,7 +342,7 @@ if $PREVIEW; then
 fi
 
 # Run git commit to start the commit process
-git commit 2> "$GIT_ROOT/git_error.log" # redirect error messages to a log
+$GIT_CMD commit 2> "$GIT_ROOT/git_error.log" # redirect error messages to a log
 
 # Check the result of the git commit operation
 if [ $? -ne 0 ]; then # if git commit failed
