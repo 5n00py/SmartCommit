@@ -2,7 +2,7 @@
 
 """
 ================================================================================
-                               ai_commit_helper.py
+                              gpt-commit-prompter 
 ================================================================================
 
 Author(s) : David Schmid (david.schmid@mailbox.org)
@@ -20,9 +20,9 @@ employs GPT-3 to offer a summarized description and detailed bullet points.
 --------------------------------- Usage --------------------------------------
 Execute the script with changes in string format or by indicating a .diff file:
 
-    python3 ai_commit_helper.py "Your changes here"
+    python3 gpt-commit-prompter "Your changes here"
     OR
-    python3 ai_commit_helper.py /path/to/changes.diff
+    python3 gpt-commit-prompter /path/to/changes.diff
 
 ================================================================================
 """

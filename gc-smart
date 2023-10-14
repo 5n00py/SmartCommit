@@ -9,14 +9,14 @@
 # Version   : 0.2.0
 #
 # ------------------------------ Description -----------------------------------
-# Leverages ai_commit_helper.py to auto-generate commit messages for staged
+# Leverages gpt-commit-prompter to auto-generate commit messages for staged
 # changes in a Git repository. A diff named staged_changes.diff is produced and
 # fed to the AI helper. The result is saved to tmp_commit_msg.txt, which is then
 # used as a template for the "git commit" command, permitting user review.
 #
 # ---------------------------- Prerequisites -----------------------------------
 # - Staged changes should be in the repo.
-# - ai_commit_helper.py should be in the current directory or in the PATH.
+# - gpt-commit-prompter should be in the current directory or in the PATH.
 # - tmp_commit_msg.txt will be overwritten each run; backup crucial data.
 # - Set tmp_commit_msg.txt as commit template via:
 #   git config --global commit.template tmp_commit_msg.txt
@@ -82,8 +82,8 @@ check_staged_changes() {
 
 check_ai_helper() {
     # Check if ai script exists and is executable and abort otherwise
-    if ! [[ -x "ai_commit_helper.py" ]] && ! command -v ai_commit_helper.py &> /dev/null; then
-        echo "Error: ai_commit_helper.py not found or not executable."
+    if ! [[ -x "gpt-commit-prompter" ]] && ! command -v gpt-commit-prompter &> /dev/null; then
+        echo "Error: gpt-commit-prompter not found or not executable."
         exit 2
     fi
 }
@@ -193,7 +193,7 @@ set_directories() {
 set_instruction() {
     # Check for the presence of the "-i" or "--instruction" option. If found,
     # set the INSTRUCTION global variable to the value immediately following
-    # the option. This value is later passed to the ai_commit_helper.py script
+    # the option. This value is later passed to the gpt-commit-prompter script
     # to guide the AI in generating commit messages. If the option is not found
     # or if no value is provided after the option, the function leaves the
     # INSTRUCTION variable empty.
@@ -237,15 +237,15 @@ set_git_cmd() {
 # ------------------------------------------------------------------------------
 
 generate_commit_message() {
-    # Use the ai_commit_helper.py script to process the diff file 
+    # Use the gpt-commit-prompter script to process the diff file 
     # (staged_changes.diff) and generate an AI-enhanced commit message.
     # Write the message to tmp_commit_msg.txt.
-    # NOTE: The ai_commit_helper.py script must be located in the same directory
+    # NOTE: The gpt-commit-prompter script must be located in the same directory
     # as this executing script for this function to work correctly.
     if [ -n "$INSTRUCTION" ]; then
-        python3 "$DIR/ai_commit_helper.py" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" > "$GIT_ROOT/tmp_commit_msg.txt"
+        python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" > "$GIT_ROOT/tmp_commit_msg.txt"
     else
-        python3 "$DIR/ai_commit_helper.py" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
+        python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
     fi
 }
 
@@ -286,12 +286,12 @@ handle_preview() {
                 ;;
             2)
                 # Regenerate commit message without instruction and preview again
-                python3 "$DIR/ai_commit_helper.py" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
+                python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
                 ;;
             3)
                 # Regenerate commit message with an instruction
                 read -p "Provide a guiding instruction for the AI: " INSTRUCTION
-                python3 "$DIR/ai_commit_helper.py" -i "$INSTRUCTION" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
+                python3 "$DIR/gpt-commit-prompter" -i "$INSTRUCTION" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
                 ;;
 			4)
                 # View staged changes
