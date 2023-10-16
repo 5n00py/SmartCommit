@@ -34,6 +34,11 @@ import openai
 
 
 def load_config(file_path="config.json"):
+    # Determine the directory where this script is located.
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    # Construct the full path to the config.json file.
+    file_path = os.path.join(dir_path, "config.json")
+
     with open(file_path, "r") as f:
         return json.load(f)
 
