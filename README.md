@@ -45,7 +45,7 @@ possible options, run `gc-smart --help`.
     cd SmartCommit
     ```
 
-    Alternatively just copy the files `gc-smart` and `ai_commit_helper.py` to
+    Alternatively just copy the files `gc-smart` and `gpt-commit-prompter` to
     the preferred location.
     
 2. Install the necessary Python libraries:
@@ -95,11 +95,11 @@ possible options, run `gc-smart --help`.
 
     Alternatively, you can create an alias for `gc-smart` providing the full path.
 
-6. Make the `gc-smart` and `ai_commit_helper.py` script executable:
+6. Make the `gc-smart` and `gpt-commit-prompter` script executable:
 
     ```bash
         chmod +x /path/to/gc-smart
-        chmod +x /path/to/ai_commit_helper.py
+        chmod +x /path/to/gpt-commit-prompter.py
     ```
     (Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
 
@@ -161,17 +161,23 @@ changes to your repository.
 
 ## Commit Message Style
 
-The `ai_commit_helper.py` script uses a specific style for the commit messages it
-generates. The messages include a summary title, followed by a detailed list of
-changes. Each change is denoted by a bullet point - and written in an
-imperative style. See the example above.
+The `gpt-commit-prompter` script uses the `imperative` style as its default for
+the commit messages it generates. However, you have the flexibility to
+configure the style through the `-s` or `--style` option.
 
-The configuration for this style is hard-coded in the script. If
-you wish to change the style, feel free to modify the system_prompt and
-changes variables in the script.
+Available styles are:
 
-As of now, there is no option to select different styles of commit messages
-directly. However, this may be a feature in future versions.
+- `imperative`: Generates a message in the imperative mood and uses title with
+  bullets.
+- `simple`: Generates a concise, straightforward commit message in one line.
+- `detailed`: Generates a more verbose commit message, detailing the changes.
+- `conventional`: Generates a commit message following the conventional commits
+  specification.
+
+These styles can also be used in combination with the `gc-smart` script.
+
+You can see how the styles are configured and further customize them by
+checking the `config.json` file.
 
 ## License
 

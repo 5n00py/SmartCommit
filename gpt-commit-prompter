@@ -6,7 +6,7 @@
 ================================================================================
 
 Author(s) : David Schmid (david.schmid@mailbox.org)
-Version   : 0.1.0
+Version   : 0.2.0
 
 ------------------------------ Description -----------------------------------
 Utilizes OpenAI's GPT-3 model to auto-generate git commit messages from
@@ -27,9 +27,16 @@ Execute the script with changes in string format or by indicating a .diff file:
 ================================================================================
 """
 
-import openai
 import argparse
+import json
 import os
+import openai
+
+
+def load_config(file_path="config.json"):
+    with open(file_path, "r") as f:
+        return json.load(f)
+
 
 def set_openai_key():
     if "OPENAI_API_KEY" not in os.environ:
@@ -50,9 +57,18 @@ def get_args():
     )
 
     parser.add_argument(
-        "-i", "--instruction",
+        "-i",
+        "--instruction",
         default="",
-        help="Additional instruction to guide the AI's response"
+        help="Additional instruction to guide the AI's response",
+    )
+
+    parser.add_argument(
+        "-s",
+        "--style",
+        default="imperative",
+        choices=["imperative", "simple", "detailed", "conventional"],
+        help="Commit message style",
     )
 
     return parser.parse_args()
@@ -69,16 +85,16 @@ def get_changes(args):
         return args.changes
 
 
-def generate_commit_message(changes, instruction):
-    system_prompt = (
-        "You are a helpful assistant that generates meaningful commit messages based "
-        "on a list of changes. The commit message should include a title summarizing "
-        "the changes and bullets '-' for the detailed changes. Each change should be "
-        "on a new line in an imperative style. Please ensure that no line "
-        "exceeds 80 characters in length."
-    )
+def generate_commit_message(changes, instruction, style="imperative"):
+    config = load_config()
 
-    changes = "Write a git commit message for the following changes: " + changes
+    # Ensure the provided style is in the configuration
+    if style not in config["style"]:
+        raise ValueError(f"Style '{style}' not found in configuration.")
+
+    system_prompt = config["style"][style]["system_prompt"]
+
+    changes = "Write a git commit message for the following changes: \n\n" + changes
 
     # Add the instruction to the AI messages
     messages = [
@@ -105,7 +121,7 @@ def main():
 
     changes = get_changes(args)
 
-    commit_message = generate_commit_message(changes, args.instruction)
+    commit_message = generate_commit_message(changes, args.instruction, args.style)
 
     print(commit_message)
 
