@@ -6,7 +6,7 @@
 #
 # Filename  : gc-smart
 # Author(s) : David Schmid (david.schmid@mailbox.org)
-# Version   : 0.2.0
+# Version   : 0.3.0
 #
 # ------------------------------ Description -----------------------------------
 # Leverages gpt-commit-prompter to auto-generate commit messages for staged
@@ -37,6 +37,7 @@ GIT_ROOT="" # The root directory of the current Git repository
 INSTRUCTION="" # Additional instructions for enhancing the AI commit message
 KEEP_FILES=false # Flag to retain intermediate files after the commit process
 PREVIEW=true # Flag to preview the AI-generated commit message to the user
+STYLE="" # Style for the AI-generated commit message
 
 
 # ------------------------------------------------------------------------------
@@ -55,9 +56,10 @@ print_help() {
     echo "Options:"
     echo "-h, --help          Display this help message."
     echo "-i, --instruction   Provide an instruction for the AI to guide commit message generation."
-    echo "--keep-files        Retain intermediate files after the commit process in the root directory."
     echo "-q, --quick         Skip the preview of the AI generated commit message and commit directly."
-	echo "--cmd               Specify a custom command for Git operations. Default is 'git'."
+    echo "-s, --style         Specify a style for the AI-generated commit message: imperative, detailed, simple, conventional."
+    echo "--keep-files        Retain intermediate files after the commit process in the root directory."
+    echo "--cmd               Specify a custom command for Git operations. Default is 'git'."
 
 }
 
@@ -232,6 +234,25 @@ set_git_cmd() {
     done
 }
 
+set_style_option() {
+    # Parse the command line arguments to detect a possible "-s" or "--style"
+    # flag. If detected, set the STYLE variable to the value provided after
+    # the flag.
+    local args=("$@")
+    for idx in "${!args[@]}"; do
+        if [ "${args[$idx]}" == "-s" ] || [ "${args[$idx]}" == "--style" ]; then
+            # Check if a potential style follows the flag
+            if [ -n "${args[$idx+1]-}" ] && [[ "${args[$idx+1]}" != -* ]]; then
+                STYLE="${args[$idx+1]}"
+                break
+            else
+                echo "Error: The -s or --style option requires an argument."
+                exit 1
+            fi
+        fi
+    done
+}
+
 
 # Commit Message Generation and Handling
 # ------------------------------------------------------------------------------
@@ -242,7 +263,9 @@ generate_commit_message() {
     # Write the message to tmp_commit_msg.txt.
     # NOTE: The gpt-commit-prompter script must be located in the same directory
     # as this executing script for this function to work correctly.
-    if [ -n "$INSTRUCTION" ]; then
+    if [ -n "$STYLE" ]; then
+        python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" -s "$STYLE" > "$GIT_ROOT/tmp_commit_msg.txt"
+    elif [ -n "$INSTRUCTION" ]; then
         python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" > "$GIT_ROOT/tmp_commit_msg.txt"
     else
         python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
@@ -322,6 +345,7 @@ set_keep_files_flag "$@"
 set_preview_flag "$@"
 set_instruction "$@"
 set_git_cmd "$@"
+set_style_option "$@"
 set_directories
 
 if [[ "$GIT_CMD" == "git" ]]; then
