@@ -51,12 +51,16 @@ possible options, run `gc-smart --help`.
 2. Install the necessary Python libraries:
 
     ```bash
-    pip install openai
+    pip install openai==0.28
     ```
 
     If you want to isolate the libraries for this project, create a virtual
     environment, activate it and run the python script within the virtual
     environment.
+
+    Note: OpenAI released a new version of their API with significant changes.
+    The script will be upgraded in the future. For the moment pin the OpenAI
+    package to the older version 0.28.
 
 3. Set your OpenAI API key as an environment variable:
 
