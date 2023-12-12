@@ -89,9 +89,9 @@ possible options, run `gc-smart --help`.
    directory. To do this, use a command like the following:
 
     ```bash
-    export PATH=$PATH:/path/to/your/scripts
+    export PATH=$PATH:/path/to/SmartCommit
     ```
-    (Don't forget to replace `/path/to/your/scripts` with the actual path 
+    (Don't forget to replace `/path/to/SmartCommit` with the actual path 
     to the directory containing `gc-smart`.) 
 
     To make this change permanent, you can add this command to your shell's
@@ -102,8 +102,8 @@ possible options, run `gc-smart --help`.
 6. Make the `gc-smart` and `gpt-commit-prompter` script executable:
 
     ```bash
-        chmod +x /path/to/gc-smart
-        chmod +x /path/to/gpt-commit-prompter.py
+        chmod +x /path/to/SmartCommit/gc-smart
+        chmod +x /path/to/SmartCommit/python/gpt-commit-prompter.py
     ```
     (Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
 
