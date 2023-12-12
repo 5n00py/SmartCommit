@@ -6,7 +6,7 @@
 #
 # Filename  : gc-smart
 # Author(s) : David Schmid (david.schmid@mailbox.org)
-# Version   : 0.3.0
+# Version   : 0.3.1
 #
 # ------------------------------ Description -----------------------------------
 # Leverages gpt-commit-prompter to auto-generate commit messages for staged
@@ -84,7 +84,7 @@ check_staged_changes() {
 
 check_ai_helper() {
     # Check if ai script exists and is executable and abort otherwise
-    if ! [[ -x "gpt-commit-prompter" ]] && ! command -v gpt-commit-prompter &> /dev/null; then
+    if ! [[ -x "$DIR/python/gpt-commit-prompter" ]] && ! command -v "$DIR/python/gpt-commit-prompter" &> /dev/null; then
         echo "Error: gpt-commit-prompter not found or not executable."
         exit 2
     fi
@@ -264,11 +264,11 @@ generate_commit_message() {
     # NOTE: The gpt-commit-prompter script must be located in the same directory
     # as this executing script for this function to work correctly.
     if [ -n "$STYLE" ]; then
-        python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" -s "$STYLE" > "$GIT_ROOT/tmp_commit_msg.txt"
+        python3 "$DIR/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" -s "$STYLE" > "$GIT_ROOT/tmp_commit_msg.txt"
     elif [ -n "$INSTRUCTION" ]; then
-        python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" > "$GIT_ROOT/tmp_commit_msg.txt"
+        python3 "$DIR/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" > "$GIT_ROOT/tmp_commit_msg.txt"
     else
-        python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
+        python3 "$DIR/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
     fi
 }
 
@@ -309,12 +309,12 @@ handle_preview() {
                 ;;
             2)
                 # Regenerate commit message without instruction and preview again
-                python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
+                python3 "$DIR/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
                 ;;
             3)
                 # Regenerate commit message with an instruction
                 read -p "Provide a guiding instruction for the AI: " INSTRUCTION
-                python3 "$DIR/gpt-commit-prompter" -i "$INSTRUCTION" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
+                python3 "$DIR/python/gpt-commit-prompter" -i "$INSTRUCTION" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
                 ;;
 			4)
                 # View staged changes
