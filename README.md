@@ -37,6 +37,7 @@ environments.
    - [Additional Options](#additional-options)
 - [Note on Commit Template Handling](#note-on-commit-template-handling-from-gc-smart-version-040)
 - [Examples](#examples)
+- [Acknowledgments](#acknowledgments)
 - [License](#license)
 
 ## Prerequisites
@@ -382,6 +383,37 @@ After reviewing the proposed commit message, if you decide to proceed, this
 message will appear as a template in your default Git editor. You can then
 finalize the message or make any necessary modifications before committing the
 changes to your repository.
+
+## Acknowledgments
+
+The roots of this project stem from my personal journey exploring the
+possibilities of AI. While I've observed that AI has its limitations in
+implementing code, at least from my perspective, it can be very helpful for
+documentation purposes. This is an aspect of my workflow that I often found to
+be tortuous and time-consuming, especially when it comes to writing meaningful
+commit messages. Thus, I began using my own script for fine-tuning commit
+messages, which eventually led to the development of this project. It is
+designed to integrate AI assistance into my workflow as seamlessly as possible,
+without the need for copying diffs.
+
+The core design, architecture, and implementation of this project, as well as
+the selection of libraries, are the product of my initiative, borne out of
+personal experimentation and implementation. AI was partially considered for
+the implementation part, mainly in the integration of the OpenAI API within the
+Python script. AI was mainly utilized for documentation, commenting, and
+occasional troubleshooting. It proved particularly useful in ensuring clarity
+and coherence in the project documentation.
+
+While there might be other similar tools available, particularly those
+integrated into IDEs, they were not considered in the development of this
+project (at least not yet).
+
+The ShellCheck tool has been useful in analyzing and finding bugs in the
+shell scripts, helping to improve the overall implementation of the project.
+
+SmartCommit itself was used for creating the commit messages and the commit
+messages itself reflect also the changes within this project for the default
+commit style setup.
 
 ## License
 
