@@ -22,7 +22,6 @@ environments.
 
 ## Table of Contents
 
-- [SmartCommit](#smartcommit)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
    - [Manual Installation](#manual-installation)
