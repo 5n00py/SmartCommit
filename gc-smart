@@ -6,7 +6,7 @@
 #
 # Filename  : gc-smart
 # Author(s) : David Schmid (david.schmid@mailbox.org)
-# Version   : 0.3.0
+# Version   : 0.3.2
 #
 # ------------------------------ Description -----------------------------------
 # Leverages gpt-commit-prompter to auto-generate commit messages for staged
@@ -26,356 +26,60 @@
 #
 # ==============================================================================
 
+# Determine the root directory of the gc-smart script
+GCS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# ------------------------------------------------------------------------------
-# Global Variables
-# ------------------------------------------------------------------------------
+# Source additional script files for modular functionality
+source "$GCS_ROOT/bash/arg-checks.sh" 
+source "$GCS_ROOT/bash/help-message.sh"
+source "$GCS_ROOT/bash/error-handling.sh"
+source "$GCS_ROOT/bash/commit-preview-handler.sh"
 
-DIR="" # The dir of the currently executing script
-GIT_CMD="git" # The command for Git operations, default is 'git'
-GIT_ROOT="" # The root directory of the current Git repository
-INSTRUCTION="" # Additional instructions for enhancing the AI commit message
-KEEP_FILES=false # Flag to retain intermediate files after the commit process
-PREVIEW=true # Flag to preview the AI-generated commit message to the user
-STYLE="" # Style for the AI-generated commit message
+# Set the git command, either default or as specified by the user
+set_git_cmd "$@"
+# Determine the root directory of the current Git repository
+GIT_ROOT=$(${GIT_CMD} rev-parse --show-toplevel)
 
-
-# ------------------------------------------------------------------------------
-# Functions
-# ------------------------------------------------------------------------------
-
-# Help Message
-# ------------------------------------------------------------------------------
-
-print_help() {
-	# Print a detailed help message for the gc-smart script
-    echo "Usage: gc-smart [OPTION]"
-    echo ""
-    echo "Automatically generate a commit message for staged changes in a Git repository."
-    echo ""
-    echo "Options:"
-    echo "-h, --help          Display this help message."
-    echo "-i, --instruction   Provide an instruction for the AI to guide commit message generation."
-    echo "-q, --quick         Skip the preview of the AI generated commit message and commit directly."
-    echo "-s, --style         Specify a style for the AI-generated commit message: imperative, detailed, simple, conventional."
-    echo "--keep-files        Retain intermediate files after the commit process in the root directory."
-    echo "--cmd               Specify a custom command for Git operations. Default is 'git'."
-
-}
-
-# Error Handling
-# ------------------------------------------------------------------------------
-
-check_git_repo() {
-    # Check if inside a $GIT_CMDgit repo and abort script otherwise
-    if ! $GIT_CMD rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-        echo "Error: Not inside a Git repository."
-        exit 2
-    fi
-}
-
-check_staged_changes() {
-    # Check if staged changes exist within the repo and abort otherwise
-    if $GIT_CMD diff --cached --quiet; then
-        echo "No staged changes to commit"
-        exit 1
-    fi
-}
-
-check_ai_helper() {
-    # Check if ai script exists and is executable and abort otherwise
-    if ! [[ -x "gpt-commit-prompter" ]] && ! command -v gpt-commit-prompter &> /dev/null; then
-        echo "Error: gpt-commit-prompter not found or not executable."
-        exit 2
-    fi
-}
-
-check_commit_template() {
-    # Check if the commit template is set to tmp_commit_msg.txt. If not, inform
-    # the user and give them an option to set it. If the user decides not to
-    # set it, the script will abort. This is essential because the script
-    # relies on the template to be set to tmp_commit_msg.txt for its
-    # AI-generated commit messages.
-    local current_template
-    current_template=$(git config --get commit.template)
-
-    # Check if the current commit template is set to tmp_commit_msg.txt
-    if [[ "$current_template" != *'tmp_commit_msg.txt' ]]; then
-        echo "The 'gc-smart' script requires 'tmp_commit_msg.txt' as the commit template to function correctly."
-        # Ask if user wants to set tmp_commit_msg.txt as the commit template
-        read -p "Would you like to set tmp_commit_msg.txt as your commit template? (y/n) " choice
-        case "$choice" in
-            y|Y )
-                git config --global commit.template tmp_commit_msg.txt
-                echo "tmp_commit_msg.txt is now set as your commit template."
-                echo "Please re-run the gc-smart script to make the change effective!"
-                exit 1
-                ;;
-            n|N|* )
-                echo "Commit template not set to required tmp_commit_msg.txt. Script will abort."
-                exit 1
-                ;;
-        esac
-    fi
-}
-
-handle_git_commit_error() {
-    # Handle specific Git errors encountered during the commit process,
-    # particularly when a user does not modify the default commit message. If
-    # the error log contains a message indicating that the user did not edit
-    # the default commit message, this function will prompt the user with a
-    # warning and provide them with an option to proceed without editing the
-    # message or to abort the commit. Check if the error log contains a
-    # specific message
-    if grep -q "you did not edit the message" "$GIT_ROOT/git_error.log"; then
-        # Warn the user
-        echo "Warning: You either did not make any changes to the commit" \
-        "message or you exited without saving. It's a good practice to customize" \
-        "commit messages for clarity."
-        read -p "Do you want to proceed without further editing and commit nevertheless? (y/n) " choice
-        case "$choice" in
-            y|Y )
-                # Bypass commit.template and directly provide a
-                # message from the file
-                 $GIT_CMD commit -m "$(cat "$GIT_ROOT/tmp_commit_msg.txt")"
-                ;;
-            n|N )
-                echo "Commit aborted."
-                ;;
-            * )
-                echo "Invalid choice. Commit aborted."
-                ;;
-        esac
-    else
-        cat "$GIT_ROOT/git_error.log" # Display other errors if there are any
-    fi
-}
-
-
-# Options and Settings
-# ------------------------------------------------------------------------------
-
-check_for_help() {
-    # Check for --help argument and print help message in case
-    for arg in "$@"; do
-        if [ "$arg" == "--help" ] || [ "$arg" == "-h" ]; then
-            print_help
-            exit 0
-        fi
-    done
-}
-
-set_keep_files_flag() {
-    # Check for --keep-files argument and set flag accordingly
-    for arg in "$@"; do
-        if [ "$arg" == "--keep-files" ]; then
-            KEEP_FILES=true
-            break
-        fi
-    done
-}
-
-set_preview_flag() {
-    # Check for --quick argument and set preview flag accordingly
-    for arg in "$@"; do
-        if [ "$arg" == "--quick" ] || [ "$arg" == "-q" ]; then
-            PREVIEW=false
-            break
-        fi
-    done
-}
-
-set_directories() {
-    # Determine the directory of the currently executing script and the Git
-	# root directory. Store them in the DIR and GIT_ROOT variables.
-    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-	GIT_ROOT=$(${GIT_CMD} rev-parse --show-toplevel)
-}
-
-set_instruction() {
-    # Check for the presence of the "-i" or "--instruction" option. If found,
-    # set the INSTRUCTION global variable to the value immediately following
-    # the option. This value is later passed to the gpt-commit-prompter script
-    # to guide the AI in generating commit messages. If the option is not found
-    # or if no value is provided after the option, the function leaves the
-    # INSTRUCTION variable empty.
-    for idx in "${!ARGS[@]}"; do
-        if [ "${ARGS[$idx]}" == "-i" ] || [ "${ARGS[$idx]}" == "--instruction" ]; then
-            # Check if a potential instruction follows the flag
-            if [ -n "${ARGS[$idx+1]-}" ] && [[ "${ARGS[$idx+1]}" != -* ]]; then
-                INSTRUCTION="${ARGS[$idx+1]}"
-                break
-            else
-                echo "Error: The -i or --instruction option requires an argument."
-                exit 1
-            fi
-        fi
-    done
-}
-
-set_git_cmd() {
-    # Parse the cl arguments to detect a possible "--cmd" flag and when
-	# detected check if there is a valid command provided after the flag. If a
-	# command is found, set the GIT_CMD variable to that value, allowing the
-	# script to usa a custom git command. If the flag is present but no command
-	# is provided or invalid, print an error message and exit the script.
-    local args=("$@")
-    for idx in "${!args[@]}"; do
-        if [ "${args[$idx]}" == "--cmd" ]; then
-            # Check if a potential command follows the flag
-            if [ -n "${args[$idx+1]-}" ] && [[ "${args[$idx+1]}" != -* ]]; then
-                GIT_CMD="${args[$idx+1]}"
-                break
-            else
-                echo "Error: The --cmd option requires an argument."
-                exit 1
-            fi
-        fi
-    done
-}
-
-set_style_option() {
-    # Parse the command line arguments to detect a possible "-s" or "--style"
-    # flag. If detected, set the STYLE variable to the value provided after
-    # the flag.
-    local args=("$@")
-    for idx in "${!args[@]}"; do
-        if [ "${args[$idx]}" == "-s" ] || [ "${args[$idx]}" == "--style" ]; then
-            # Check if a potential style follows the flag
-            if [ -n "${args[$idx+1]-}" ] && [[ "${args[$idx+1]}" != -* ]]; then
-                STYLE="${args[$idx+1]}"
-                break
-            else
-                echo "Error: The -s or --style option requires an argument."
-                exit 1
-            fi
-        fi
-    done
-}
-
-
-# Commit Message Generation and Handling
-# ------------------------------------------------------------------------------
-
-generate_commit_message() {
-    # Use the gpt-commit-prompter script to process the diff file 
-    # (staged_changes.diff) and generate an AI-enhanced commit message.
-    # Write the message to tmp_commit_msg.txt.
-    # NOTE: The gpt-commit-prompter script must be located in the same directory
-    # as this executing script for this function to work correctly.
-    if [ -n "$STYLE" ]; then
-        python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" -s "$STYLE" > "$GIT_ROOT/tmp_commit_msg.txt"
-    elif [ -n "$INSTRUCTION" ]; then
-        python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" > "$GIT_ROOT/tmp_commit_msg.txt"
-    else
-        python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
-    fi
-}
-
-
-handle_preview() {
-    # Interactively preview the auto-generated commit message.
-    # The user is presented with options to:
-    # 1. Proceed with the current commit message.
-    # 2. Regenerate commit message without instruction.
-    # 3. Regenerate commit message with an instruction.
-    # 4. View staged changes
-    # 5. Abort the commit process.
-    # The loop continues until the user decides to proceed with the commit or
-    # aborts.
-    regenerate=true
-
-    while $regenerate; do
-        # Preview the auto-generated commit message
-        echo -e "\nGenerated Commit Message:"
-        echo -e "-------------------------\n"
-        cat "$GIT_ROOT/tmp_commit_msg.txt"
-        echo -e "\n----------------------------------------------------------------\n\n"
-
-        # Ask the user if he wants to proceed or regenerate
-        read -p "Options: 
-        1. Continue with commit
-        2. Regenerate commit message without instruction
-        3. Regenerate commit message with an instruction
-        4. View staged changes
-        5. Abort 
-
-        Choose [1/2/3/4/5]: " choice
-
-        case "$choice" in
-            1)
-                # Continue to commit logic...
-                regenerate=false
-                ;;
-            2)
-                # Regenerate commit message without instruction and preview again
-                python3 "$DIR/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
-                ;;
-            3)
-                # Regenerate commit message with an instruction
-                read -p "Provide a guiding instruction for the AI: " INSTRUCTION
-                python3 "$DIR/gpt-commit-prompter" -i "$INSTRUCTION" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
-                ;;
-			4)
-                # View staged changes
-                less "$GIT_ROOT/staged_changes.diff"
-                ;;
-            5)
-                # Abort
-                echo "Commit aborted."
-                rm -f "$GIT_ROOT/staged_changes.diff" "$GIT_ROOT/tmp_commit_msg.txt"
-                exit 1
-                ;;
-            *)
-                echo "Invalid choice. Commit aborted."
-                rm -f "$GIT_ROOT/staged_changes.diff" "$GIT_ROOT/tmp_commit_msg.txt"
-                exit 1
-                ;;
-        esac
-    done
-}
-
-#-------------------------------------------------------------------------------
-# Main Script Flow
-#-------------------------------------------------------------------------------
-
-# Argument parsing and settings
+# Parse and handle script arguments
 check_for_help "$@"
 set_keep_files_flag "$@"
 set_preview_flag "$@"
 set_instruction "$@"
-set_git_cmd "$@"
 set_style_option "$@"
-set_directories
 
+# Check for prerequisites and conditions
 if [[ "$GIT_CMD" == "git" ]]; then
-    # Only check if the repository is a valid Git repository if GIT_CMD is 'git'
+    # Only perform this check if using the default git command
     check_git_repo
 fi
+
+# Check for staged changes, AI helper script, and commit template
 check_staged_changes
 check_ai_helper
 check_commit_template
 
-# Generate a diff of the staged changes
+# Create a diff file of the staged changes
 $GIT_CMD diff --cached > "$GIT_ROOT/staged_changes.diff"
 
+# Generate the commit message using the AI helper
 generate_commit_message
 
+# If preview is enabled, handle the preview and interaction process
 if $PREVIEW; then
 	handle_preview
 fi
 
-# Run git commit to start the commit process
-$GIT_CMD commit 2> "$GIT_ROOT/git_error.log" # redirect error messages to a log
+# Commit the changes to the Git repository
+$GIT_CMD commit 2> "$GIT_ROOT/git_error.log"  # Redirect error messages to a log file
 
 # Check the result of the git commit operation
-if [ $? -ne 0 ]; then # if git commit failed
-	handle_git_commit_error
+if [ $? -ne 0 ]; then  # Check for non-zero exit status indicating failure
+	handle_git_commit_error  # Handle any commit errors
 fi
 
-# Delete files if --keep-files argument is not passed
+# Cleanup: Delete files unless the --keep-files flag is set
 if ! $KEEP_FILES; then
-    rm -f "$GIT_ROOT/git_error.log"
-    rm -f "$GIT_ROOT/staged_changes.diff" 
-	rm -f "$GIT_ROOT/tmp_commit_msg.txt"
+    rm -f "$GIT_ROOT/git_error.log"  # Remove the error log file
+    rm -f "$GIT_ROOT/staged_changes.diff"  # Remove the staged changes diff file
+	rm -f "$GIT_ROOT/tmp_commit_msg.txt"  # Remove the temporary commit message file
 fi
