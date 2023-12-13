@@ -26,136 +26,60 @@
 #
 # ==============================================================================
 
-# Commit Message Generation and Handling
-# ------------------------------------------------------------------------------
-
-generate_commit_message() {
-    # Use the gpt-commit-prompter script to process the diff file 
-    # (staged_changes.diff) and generate an AI-enhanced commit message.
-    # Write the message to tmp_commit_msg.txt.
-    # NOTE: The gpt-commit-prompter script must be located in the same directory
-    # as this executing script for this function to work correctly.
-    if [ -n "$STYLE" ]; then
-        python3 "$GCS_ROOT/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" -s "$STYLE" > "$GIT_ROOT/tmp_commit_msg.txt"
-    elif [ -n "$INSTRUCTION" ]; then
-        python3 "$GCS_ROOT/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" > "$GIT_ROOT/tmp_commit_msg.txt"
-    else
-        python3 "$GCS_ROOT/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
-    fi
-}
-
-
-handle_preview() {
-    # Interactively preview the auto-generated commit message.
-    # The user is presented with options to:
-    # 1. Proceed with the current commit message.
-    # 2. Regenerate commit message without instruction.
-    # 3. Regenerate commit message with an instruction.
-    # 4. View staged changes
-    # 5. Abort the commit process.
-    # The loop continues until the user decides to proceed with the commit or
-    # aborts.
-    regenerate=true
-
-    while $regenerate; do
-        # Preview the auto-generated commit message
-        echo -e "\nGenerated Commit Message:"
-        echo -e "-------------------------\n"
-        cat "$GIT_ROOT/tmp_commit_msg.txt"
-        echo -e "\n----------------------------------------------------------------\n\n"
-
-        # Ask the user if he wants to proceed or regenerate
-        read -p "Options: 
-        1. Continue with commit
-        2. Regenerate commit message without instruction
-        3. Regenerate commit message with an instruction
-        4. View staged changes
-        5. Abort 
-
-        Choose [1/2/3/4/5]: " choice
-
-        case "$choice" in
-            1)
-                # Continue to commit logic...
-                regenerate=false
-                ;;
-            2)
-                # Regenerate commit message without instruction and preview again
-                python3 "$GCS_ROOT/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
-                ;;
-            3)
-                # Regenerate commit message with an instruction
-                read -p "Provide a guiding instruction for the AI: " INSTRUCTION
-                python3 "$GCS_ROOT/python/gpt-commit-prompter" -i "$INSTRUCTION" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
-                ;;
-			4)
-                # View staged changes
-                less "$GIT_ROOT/staged_changes.diff"
-                ;;
-            5)
-                # Abort
-                echo "Commit aborted."
-                rm -f "$GIT_ROOT/staged_changes.diff" "$GIT_ROOT/tmp_commit_msg.txt"
-                exit 1
-                ;;
-            *)
-                echo "Invalid choice. Commit aborted."
-                rm -f "$GIT_ROOT/staged_changes.diff" "$GIT_ROOT/tmp_commit_msg.txt"
-                exit 1
-                ;;
-        esac
-    done
-}
-
-#-------------------------------------------------------------------------------
-# Main Script Flow
-#-------------------------------------------------------------------------------
-
+# Determine the root directory of the gc-smart script
 GCS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# Source additional script files for modular functionality
 source "$GCS_ROOT/bash/arg-checks.sh" 
 source "$GCS_ROOT/bash/help-message.sh"
 source "$GCS_ROOT/bash/error-handling.sh"
+source "$GCS_ROOT/bash/commit-preview-handler.sh"
 
+# Set the git command, either default or as specified by the user
 set_git_cmd "$@"
+# Determine the root directory of the current Git repository
 GIT_ROOT=$(${GIT_CMD} rev-parse --show-toplevel)
 
-# Argument parsing and settings
+# Parse and handle script arguments
 check_for_help "$@"
 set_keep_files_flag "$@"
 set_preview_flag "$@"
 set_instruction "$@"
 set_style_option "$@"
 
+# Check for prerequisites and conditions
 if [[ "$GIT_CMD" == "git" ]]; then
-    # Only check if the repository is a valid Git repository if GIT_CMD is 'git'
+    # Only perform this check if using the default git command
     check_git_repo
 fi
 
+# Check for staged changes, AI helper script, and commit template
 check_staged_changes
 check_ai_helper
 check_commit_template
 
-# Generate a diff of the staged changes
+# Create a diff file of the staged changes
 $GIT_CMD diff --cached > "$GIT_ROOT/staged_changes.diff"
 
+# Generate the commit message using the AI helper
 generate_commit_message
 
+# If preview is enabled, handle the preview and interaction process
 if $PREVIEW; then
 	handle_preview
 fi
 
-# Run git commit to start the commit process
-$GIT_CMD commit 2> "$GIT_ROOT/git_error.log" # redirect error messages to a log
+# Commit the changes to the Git repository
+$GIT_CMD commit 2> "$GIT_ROOT/git_error.log"  # Redirect error messages to a log file
 
 # Check the result of the git commit operation
-if [ $? -ne 0 ]; then # if git commit failed
-	handle_git_commit_error
+if [ $? -ne 0 ]; then  # Check for non-zero exit status indicating failure
+	handle_git_commit_error  # Handle any commit errors
 fi
 
-# Delete files if --keep-files argument is not passed
+# Cleanup: Delete files unless the --keep-files flag is set
 if ! $KEEP_FILES; then
-    rm -f "$GIT_ROOT/git_error.log"
-    rm -f "$GIT_ROOT/staged_changes.diff" 
-	rm -f "$GIT_ROOT/tmp_commit_msg.txt"
+    rm -f "$GIT_ROOT/git_error.log"  # Remove the error log file
+    rm -f "$GIT_ROOT/staged_changes.diff"  # Remove the staged changes diff file
+	rm -f "$GIT_ROOT/tmp_commit_msg.txt"  # Remove the temporary commit message file
 fi
