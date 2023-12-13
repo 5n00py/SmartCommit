@@ -96,18 +96,7 @@ possible options, run `gc-smart --help`.
     configuration file by adding the above line for example to the .bashrc or
     .zshrc depending on the shell.
 
-4. In order to use `gc-smart`, the `tmp_commit_msg.txt` file has to be set as
-   the commit template in your Git configuration. You can set this using the
-   command:
-
-    ```bash
-    git config --global commit.template tmp_commit_msg.txt
-    ```
-
-    Note: If you skip this step, the first time you run `gc-smart`, the script
-    will present you with a prompt to set this up for you.
-
-5. Add the location of the `gc-smart` script to your shell's PATH
+4. Add the location of the `gc-smart` script to your shell's PATH
    environment variable. This allows you to run it from any
    directory. To do this, use a command like the following:
 
@@ -122,13 +111,31 @@ possible options, run `gc-smart --help`.
 
     Alternatively, you can create an alias for `gc-smart` providing the full path.
 
-6. Make the `gc-smart` and `gpt-commit-prompter` script executable:
+5. Make the `gc-smart` and `gpt-commit-prompter` script executable:
 
     ```bash
         chmod +x /path/to/SmartCommit/gc-smart
         chmod +x /path/to/SmartCommit/python/gpt-commit-prompter.py
     ```
     (Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
+
+## Note on Commit Template Handling from gc-smart Version 0.4.0
+
+Starting from version 0.4.0 of `gc-smart`, there is no longer a need to
+manually set `tmp_commit_msg.txt` as the global commit template in your Git
+configuration. The script has been updated to automatically handle the commit
+template for you.
+
+When you run `gc-smart`, it will now:
+
+1. Temporarily back up any existing Git commit template you have configured. 
+2. Set `tmp_commit_msg.txt` as the commit template for the duration of its
+   execution.
+3. Once the script completes or exits, it will restore your original commit
+   template. 
+
+This improvement ensures to maintain your existing Git configurations while
+gc-smart is in operation.
 
 ## Examples
 
@@ -194,8 +201,8 @@ configure the style through the `-s` or `--style` option.
 
 Available styles are:
 
-- `imperative`: Generates a message in the imperative mood and uses title with
-  bullets.
+- `imperative`: Generates a message in the imperative mood and uses
+  conventional title with bullets.
 - `simple`: Generates a concise, straightforward commit message in one line.
 - `detailed`: Generates a more verbose commit message, detailing the changes.
 - `conventional`: Generates a commit message following the conventional commits
