@@ -26,38 +26,6 @@
 #
 # ==============================================================================
 
-source bash/arg-checks.sh 
-
-# ------------------------------------------------------------------------------
-# Global Variables
-# ------------------------------------------------------------------------------
-
-DIR="" # The dir of the currently executing script
-GIT_ROOT="" # The root directory of the current Git repository
-
-# ------------------------------------------------------------------------------
-# Functions
-# ------------------------------------------------------------------------------
-
-# Help Message
-# ------------------------------------------------------------------------------
-
-print_help() {
-	# Print a detailed help message for the gc-smart script
-    echo "Usage: gc-smart [OPTION]"
-    echo ""
-    echo "Automatically generate a commit message for staged changes in a Git repository."
-    echo ""
-    echo "Options:"
-    echo "-h, --help          Display this help message."
-    echo "-i, --instruction   Provide an instruction for the AI to guide commit message generation."
-    echo "-q, --quick         Skip the preview of the AI generated commit message and commit directly."
-    echo "-s, --style         Specify a style for the AI-generated commit message: imperative, detailed, simple, conventional."
-    echo "--keep-files        Retain intermediate files after the commit process in the root directory."
-    echo "--cmd               Specify a custom command for Git operations. Default is 'git'."
-
-}
-
 # Error Handling
 # ------------------------------------------------------------------------------
 
@@ -79,7 +47,7 @@ check_staged_changes() {
 
 check_ai_helper() {
     # Check if ai script exists and is executable and abort otherwise
-    if ! [[ -x "$DIR/python/gpt-commit-prompter" ]] && ! command -v "$DIR/python/gpt-commit-prompter" &> /dev/null; then
+    if ! [[ -x "$GCS_ROOT/python/gpt-commit-prompter" ]] && ! command -v "$DIR/python/gpt-commit-prompter" &> /dev/null; then
         echo "Error: gpt-commit-prompter not found or not executable."
         exit 2
     fi
@@ -146,15 +114,6 @@ handle_git_commit_error() {
     fi
 }
 
-
-set_directories() {
-    # Determine the directory of the currently executing script and the Git
-	# root directory. Store them in the DIR and GIT_ROOT variables.
-    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-	GIT_ROOT=$(${GIT_CMD} rev-parse --show-toplevel)
-}
-
-
 # Commit Message Generation and Handling
 # ------------------------------------------------------------------------------
 
@@ -165,11 +124,11 @@ generate_commit_message() {
     # NOTE: The gpt-commit-prompter script must be located in the same directory
     # as this executing script for this function to work correctly.
     if [ -n "$STYLE" ]; then
-        python3 "$DIR/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" -s "$STYLE" > "$GIT_ROOT/tmp_commit_msg.txt"
+        python3 "$GCS_ROOT/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" -s "$STYLE" > "$GIT_ROOT/tmp_commit_msg.txt"
     elif [ -n "$INSTRUCTION" ]; then
-        python3 "$DIR/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" > "$GIT_ROOT/tmp_commit_msg.txt"
+        python3 "$GCS_ROOT/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" -i "$INSTRUCTION" > "$GIT_ROOT/tmp_commit_msg.txt"
     else
-        python3 "$DIR/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
+        python3 "$GCS_ROOT/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
     fi
 }
 
@@ -210,12 +169,12 @@ handle_preview() {
                 ;;
             2)
                 # Regenerate commit message without instruction and preview again
-                python3 "$DIR/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
+                python3 "$GCS_ROOT/python/gpt-commit-prompter" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
                 ;;
             3)
                 # Regenerate commit message with an instruction
                 read -p "Provide a guiding instruction for the AI: " INSTRUCTION
-                python3 "$DIR/python/gpt-commit-prompter" -i "$INSTRUCTION" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
+                python3 "$GCS_ROOT/python/gpt-commit-prompter" -i "$INSTRUCTION" "$GIT_ROOT/staged_changes.diff" > "$GIT_ROOT/tmp_commit_msg.txt"
                 ;;
 			4)
                 # View staged changes
@@ -240,19 +199,26 @@ handle_preview() {
 # Main Script Flow
 #-------------------------------------------------------------------------------
 
+GCS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+source "$GCS_ROOT/bash/arg-checks.sh" 
+source "$GCS_ROOT/bash/help-message.sh"
+
+set_git_cmd "$@"
+GIT_ROOT=$(${GIT_CMD} rev-parse --show-toplevel)
+
 # Argument parsing and settings
 check_for_help "$@"
 set_keep_files_flag "$@"
 set_preview_flag "$@"
 set_instruction "$@"
-set_git_cmd "$@"
 set_style_option "$@"
-set_directories
 
 if [[ "$GIT_CMD" == "git" ]]; then
     # Only check if the repository is a valid Git repository if GIT_CMD is 'git'
     check_git_repo
 fi
+
 check_staged_changes
 check_ai_helper
 check_commit_template

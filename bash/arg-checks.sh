@@ -1,3 +1,9 @@
+#!/bin/bash
+
+# This script handles the command-line arguments for the gc-smart script to
+# customize the commit process, including message style, preview options, and
+# instructions for AI message generation.
+
 # ------------------------------------------------------------------------------
 # Global Variables
 # ------------------------------------------------------------------------------
@@ -7,6 +13,10 @@ INSTRUCTION="" # Additional instructions for enhancing the AI commit message
 KEEP_FILES=false # Flag to retain intermediate files after the commit process
 PREVIEW=true # Flag to preview the AI-generated commit message to the user
 STYLE="" # Style for the AI-generated commit message
+
+# ------------------------------------------------------------------------------
+# Functions
+# ------------------------------------------------------------------------------
 
 check_for_help() {
     # Check for --help argument and print help message in case
@@ -98,5 +108,4 @@ set_style_option() {
         fi
     done
 }
-
 
