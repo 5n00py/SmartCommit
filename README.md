@@ -38,6 +38,8 @@ possible options, run `gc-smart --help`.
 
 ## Installation
 
+### Manual Installation
+
 1. Clone this repository to your local machine using git:
 
     ```bash
@@ -118,6 +120,64 @@ possible options, run `gc-smart --help`.
         chmod +x /path/to/SmartCommit/python/gpt-commit-prompter.py
     ```
     (Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
+
+6. After the setup you will either have to restart your terminal or source your
+   shell configuration for the changes to take efferc. If you use Bash, run:
+
+   ```bash
+   source ~/.bashrc
+   ```
+
+   If you use Zsh, run:
+
+   ```bash
+   source ~/.zshrc
+   ```
+
+### Using the Setup Script
+
+For a more automated setup process, you can use the
+[setup_sc.sh](setup/setup_sc.sh) script located in the `setup` directory. This
+will set up the Python environment, install necessary dependencies, configure
+the OpenAI API key and update the shell's configuration.
+
+**Note:** If the `OPENAI_API_KEY` environment variable is not already set, the
+script will prompt you to enter an OpenAI API key. You will need to paste the
+key at the prompt, so make sure you have it ready, see also
+[Where do I find my API key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key).
+
+1. Clone the Repository as described in the first step of the Manual
+   Installation.
+
+2. Navigate to the setup directory, make the script executable and run it:
+
+  ```bash
+  cd SmartCommit/setup && chmod +x setup_sc.sh && ./setup_sc.sh
+  ```
+
+  The script will perform several actions:
+  - Create and set up a virtual environment for Python
+  - Check if Python version is 3.7 or higher
+  - Install requiret python libraries in the venv
+  - Prompt for adding an `OPENAI_API_KEY` and adding it to `.bashrc` or
+    `.zshrc` if they exist.
+  - Add `gc-smart` script to the shell's PATH environment variable.
+  - Make the necessary scripts executable.
+
+3. Restart or source your shell configuration as descripted under 6. in the
+   Manual Installation above.
+
+### Quick Setup with One-Liner
+
+For an even swifter setup you can use a one-liner that clones the repository
+into `~/.local/share/SmartCommit` and then runs the setup script:
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/5n00py/SmartCommit/main/setup/setup_quick_wget.sh)
+```
+
+Upon completion don't forget to restart or source your shell configuration as
+described under 6. in the Manuall Installation section above.
 
 ## Configuration
 
