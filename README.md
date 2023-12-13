@@ -122,8 +122,27 @@ possible options, run `gc-smart --help`.
 ## Configuration
 
 The `gpt-commit-prompter` used in `gc-smart` allows configuration through the
-[config.json](config.json) file. This flexibility ensures that the tool can be
-easily adjusted to specific needs for generating commit messages.
+`config.json` file. This flexibility ensures that the tool can be easily
+adjusted to specific needs for generating commit messages.
+
+The default configuration is located in the [config.json](config.json) file
+within the SmartCommit directory. For personalized settings, you can create a
+custom configuration file at
+
+```bash 
+~/.config/SmartCommit/config.json
+```
+
+When present, this file will be prioritized over the default configuration in
+the SmartCommit folder.
+
+To do this you can create the `~/.config/SmartCommit` directory (if it doesn't
+exist yet) and copy the default `config.json` file to it:
+
+```bash
+mkdir -p ~/.config/SmartCommit/
+cp /path/to/SmartCommit/config.json ~/.config/SmartCommit/
+```
 
 ### Commit Message Style
 
@@ -148,6 +167,24 @@ configure the GPT model used by the script. This feature enables you to select
 the most appropriate model version for your needs, ensuring optimal performance
 and relevance of the generated commit messages. To change the model, simply
 update the `model` section in the `config.json` file.
+
+For instance, if you have access to newer models like GPT-4, you can change the 
+model configuration to use `gpt-4`. This might improve the quality of the 
+generated commit messages.
+
+To change the model, simply update the `model` section in the `config.json` file. 
+
+For example:
+```json
+{
+    "model": {
+        "name": "gpt-4"
+    }
+    ...
+```
+
+Keep in mind that using different models may require different levels of access
+or subscription plans with OpenAI.
 
 ## Note on Commit Template Handling from gc-smart Version 0.4.0
 
