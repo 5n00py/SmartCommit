@@ -6,7 +6,7 @@
 #
 # Filename  : gc-smart
 # Author(s) : David Schmid (david.schmid@mailbox.org)
-# Version   : 0.3.1
+# Version   : 0.3.2
 #
 # ------------------------------ Description -----------------------------------
 # Leverages gpt-commit-prompter to auto-generate commit messages for staged
