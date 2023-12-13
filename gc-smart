@@ -6,7 +6,7 @@
 #
 # Filename  : gc-smart
 # Author(s) : David Schmid (david.schmid@mailbox.org)
-# Version   : 0.3.2
+# Version   : 0.4.0
 #
 # ------------------------------ Description -----------------------------------
 # Leverages gpt-commit-prompter to auto-generate commit messages for staged
@@ -61,6 +61,13 @@ check_commit_template
 # Create a diff file of the staged changes
 $GIT_CMD diff --cached > "$GIT_ROOT/staged_changes.diff"
 
+# Path to the virtual environment for the gpt-commit-prompter script
+VENV_PATH="$GCS_ROOT/python/venv"
+
+# Activate the virtual environment
+# shellcheck disable=SC1091
+source "$VENV_PATH/bin/activate"
+
 # Generate the commit message using the AI helper
 generate_commit_message
 
@@ -73,9 +80,12 @@ fi
 $GIT_CMD commit 2> "$GIT_ROOT/git_error.log"  # Redirect error messages to a log file
 
 # Check the result of the git commit operation
-if [ $? -ne 0 ]; then  # Check for non-zero exit status indicating failure
-	handle_git_commit_error  # Handle any commit errors
+if ! $GIT_CMD commit 2> "$GIT_ROOT/git_error.log"; then
+    handle_git_commit_error  # Handle any commit errors
 fi
+
+# Deactivate the virtual environment
+deactivate
 
 # Cleanup: Delete files unless the --keep-files flag is set
 if ! $KEEP_FILES; then

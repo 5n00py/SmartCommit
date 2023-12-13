@@ -44,16 +44,46 @@ possible options, run `gc-smart --help`.
     git clone https://github.com/5n00py/SmartCommit.git
     ```
 
-2. Install the necessary Python libraries:
+2. Setting up the Python Environment:
+
+    The necessary Python libraries have to be installed and isolated for this
+    project in a virtual environment called `venv` within the `python` folder.
+    The `gc-smart` script will automatically activate and deactivate this
+    virtual environment, so manual activation is not required.
+
+    Navigate to the `python` directory in the `SmartCommit` project:
 
     ```bash
     cd SmartCommit/python
-    pip install -r requirements.txt
     ```
 
-    If you want to isolate the libraries for this project, create a virtual
-    environment, activate it and run the python script within the virtual
-    environment.
+    Create a virtual environment named `venv`:
+
+    ```bash
+    python3 -m venv venv
+    ```
+
+    Activate the virtual environment:
+
+    ```bash
+    source venv/bin/activate
+    ```
+
+    Install the required Python libraries:
+
+    ```bash
+    pip3 install -r requirements.txt
+    ```
+
+    Deactivate the virtual environment:
+
+    ```bash
+    deactivate
+    ```
+
+    Now the python environment is set up with all the openai dependences, and
+    the `gp-smart` script will automatically use this environment when
+    executed.
 
 3. Set your OpenAI API key as an environment variable:
 
