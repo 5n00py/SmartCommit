@@ -91,33 +91,6 @@ def get_changes(args):
     else:
         return args.changes
 
-# def generate_commit_message(changes, instruction, style="imperative"):
-#     config = load_config()
-#
-#     # Ensure the provided style is in the configuration
-#     if style not in config["style"]:
-#         raise ValueError(f"Style '{style}' not found in configuration.")
-#
-#     system_prompt = config["style"][style]["system_prompt"]
-#
-#     # Constructing the prompt for the AI
-#     prompt = f"{system_prompt}\n\nChanges:\n{changes}\n\n"
-#     if instruction:
-#         prompt += f"Instruction: {instruction}\n"
-#
-#     # Call the OpenAI API with the constructed prompt
-#     response = openai.Completion.create(
-#         engine="text-davinci-003",  # or another model of your choice
-#         prompt=prompt,
-#         max_tokens=150,  # Adjust as needed
-#         n=1,  # Number of completions to generate
-#         stop=None  # String where the API will stop generating further content
-#     )
-#
-#     # Extracting the commit message from the response
-#     commit_message = response.choices[0].text.strip()
-#     return commit_message
-
 def generate_commit_message(changes, instruction, style="imperative"):
     config = load_config()
 
@@ -135,13 +108,20 @@ def generate_commit_message(changes, instruction, style="imperative"):
     # Instantiate the OpenAI client
     client = OpenAI()
 
+    # Get the model name from the configuration
+    model_config = config.get("model")
+    if not model_config or "name" not in model_config:
+        raise ValueError("Model configuration not found in config.json")
+
+    model_name = model_config["name"]
+
     # Call the OpenAI API with the constructed prompt
     response = client.chat.completions.create(
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt}
         ],
-        model="gpt-3.5-turbo", 
+        model=model_name, 
     )
 
     # Extracting the commit message from the response

@@ -36,7 +36,7 @@ possible options, run `gc-smart --help`.
 - Staged changes in the current repo to be commited
 - `tmp_commit_msg.txt` has to be configured as commit template (see below)
 
-## Installation and Setup
+## Installation
 
 1. Clone this repository to your local machine using git:
 
@@ -119,6 +119,36 @@ possible options, run `gc-smart --help`.
     ```
     (Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
 
+## Configuration
+
+The `gpt-commit-prompter` used in `gc-smart` allows configuration through the
+[config.json](config.json) file. This flexibility ensures that the tool can be
+easily adjusted to specific needs for generating commit messages.
+
+### Commit Message Style
+
+By default, the script uses the `imperative` style for commit messages. You can
+choose a different style by using the `-s` or `--style` option when running the
+script. The available styles, as defined in the `config.json` file, are:
+
+- `imperative`: Generates a message in the imperative mood with a conventional
+  title and bullet points.
+- `simple`: Produces a concise, one-line commit message.
+- `detailed`: Creates a verbose commit message, elaborating on the changes.
+- `conventional`: Follows the Conventional Commits specification for the commit
+  message format.
+
+You can view and customize the styles by editing their corresponding entries in
+the `config.json` file.
+
+### GPT Model Configuration
+
+In addition to style customization, the `config.json` file allows you to
+configure the GPT model used by the script. This feature enables you to select
+the most appropriate model version for your needs, ensuring optimal performance
+and relevance of the generated commit messages. To change the model, simply
+update the `model` section in the `config.json` file.
+
 ## Note on Commit Template Handling from gc-smart Version 0.4.0
 
 Starting from version 0.4.0 of `gc-smart`, there is no longer a need to
@@ -192,26 +222,6 @@ After reviewing the proposed commit message, if you decide to proceed, this
 message will appear as a template in your default Git editor. You can then
 finalize the message or make any necessary modifications before committing the
 changes to your repository.
-
-## Commit Message Style
-
-The `gpt-commit-prompter` script uses the `imperative` style as its default for
-the commit messages it generates. However, you have the flexibility to
-configure the style through the `-s` or `--style` option.
-
-Available styles are:
-
-- `imperative`: Generates a message in the imperative mood and uses
-  conventional title with bullets.
-- `simple`: Generates a concise, straightforward commit message in one line.
-- `detailed`: Generates a more verbose commit message, detailing the changes.
-- `conventional`: Generates a commit message following the conventional commits
-  specification.
-
-These styles can also be used in combination with the `gc-smart` script.
-
-You can see how the styles are configured and further customize them by
-checking the `config.json` file.
 
 ## License
 
