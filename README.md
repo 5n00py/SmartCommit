@@ -10,23 +10,35 @@ This is where `gc-smart` steps in.
 
 The script generates an AI enhanced commit message based on the diffs of your
 staged changes, reducing the manual effort involved in crafting meaningful
-commit descriptions. By default, after running the script within a repository,
-a preview of the AI-generated commit message is displayed. You are then
-presented with the options:
+commit descriptions. The generated message will be used as a template for the
+further editing of the commit message, allowing to review and further customize
+the message if needed before finalizing the commit.
 
-1. To continue with the current commit message.
-2. To regenerate a new commit message.
-3. To regenerate a new commit message by adding further instruction.
-4. To view the staged changes.
-5. To abort the commit process altogether.
+**IMPORTANT NOTE:** `SmartCommit` is primarily designed for users working in a
+UNIX-like OS environment performing git operations directly from the command
+line. Its functionality and commands are tailored to these systems and
+workflows and might not be fully compatible or perform as expected in other
+environments.
 
-If you choose to continue, the generated message is used as a template for the 
-`git commit` command, allowing you to review and further customize the message
-if needed before finalizing it.
+## Table of Contents
 
-For quick commits, you can use the `-q` or `--quick` options to skip the
-preview and commit directly with the AI-generated message. To see all the
-possible options, run `gc-smart --help`.
+- [SmartCommit](#smartcommit)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+   - [Manual Installation](#manual-installation)
+   - [Using the Setup Script](#using-the-setup-script)
+   - [Quick Setup with One-Liner](#quick-setup-with-one-liner)
+- [Configuration](#configuration)
+   - [Commit Message Style](#commit-message-style)
+   - [GPT Model Configuration](#gpt-model-configuration)
+- [Usage](#usage)
+   - [Basic Workflow](#basic-workflow)
+   - [Quick Commits](#quick-commits)
+   - [Additional Options](#additional-options)
+- [Note on Commit Template Handling](#note-on-commit-template-handling-from-gc-smart-version-040)
+- [Examples](#examples)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
 
 ## Prerequisites
 
@@ -37,6 +49,8 @@ possible options, run `gc-smart --help`.
 - `tmp_commit_msg.txt` has to be configured as commit template (see below)
 
 ## Installation
+
+### Manual Installation
 
 1. Clone this repository to your local machine using git:
 
@@ -119,6 +133,64 @@ possible options, run `gc-smart --help`.
     ```
     (Don't forget to replace `/path/to/gc-smart` with the actual path to the script.
 
+6. After the setup you will either have to restart your terminal or source your
+   shell configuration for the changes to take efferc. If you use Bash, run:
+
+   ```bash
+   source ~/.bashrc
+   ```
+
+   If you use Zsh, run:
+
+   ```bash
+   source ~/.zshrc
+   ```
+
+### Using the Setup Script
+
+For a more automated setup process, you can use the
+[setup_sc.sh](setup/setup_sc.sh) script located in the `setup` directory. This
+will set up the Python environment, install necessary dependencies, configure
+the OpenAI API key and update the shell's configuration.
+
+**Note:** If the `OPENAI_API_KEY` environment variable is not already set, the
+script will prompt you to enter an OpenAI API key. You will need to paste the
+key at the prompt, so make sure you have it ready, see also
+[Where do I find my API key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key).
+
+1. Clone the Repository as described in the first step of the Manual
+   Installation.
+
+2. Navigate to the setup directory, make the script executable and run it:
+
+  ```bash
+  cd SmartCommit/setup && chmod +x setup_sc.sh && ./setup_sc.sh
+  ```
+
+  The script will perform several actions:
+  - Create and set up a virtual environment for Python
+  - Check if Python version is 3.7 or higher
+  - Install requiret python libraries in the venv
+  - Prompt for adding an `OPENAI_API_KEY` and adding it to `.bashrc` or
+    `.zshrc` if they exist.
+  - Add `gc-smart` script to the shell's PATH environment variable.
+  - Make the necessary scripts executable.
+
+3. Restart or source your shell configuration as descripted under 6. in the
+   Manual Installation above.
+
+### Quick Setup with One-Liner
+
+For an even swifter setup you can use a one-liner that clones the repository
+into `~/.local/share/SmartCommit` and then runs the setup script:
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/5n00py/SmartCommit/main/setup/setup_quick_wget.sh)
+```
+
+Upon completion don't forget to restart or source your shell configuration as
+described under 6. in the Manuall Installation section above.
+
 ## Configuration
 
 The `gpt-commit-prompter` used in `gc-smart` allows configuration through the
@@ -185,6 +257,58 @@ For example:
 
 Keep in mind that using different models may require different levels of access
 or subscription plans with OpenAI.
+
+## Usage
+
+`gc-smart` is designed to improve the commit process in a Git repository.
+Before using the script, ensure that you are in a Git repository and have
+changes staged for commit. The script works best when there are meaningful
+changes staged that need clear and descriptive commit messages.
+
+### Basic Workflow 
+
+By default, after running the script within a repository, a preview of the
+AI-generated commit message is displayed. You are then presented with the
+following options:
+
+1. Continue with the current commit message: Use the AI-generated message as a
+   template for the git commit command. You can review and further customize
+   the message if needed before finalizing the commit. 
+2. Regenerate a new commit message: Generate a new message without additional
+   input. 
+3. Regenerate with further instruction: Provide additional context or
+   instructions to guide the AI in generating a more accurate commit message.
+   
+4. View the staged changes: Review the changes that are staged for commit. 
+5. Abort the commit process: Exit the script without committing. 
+
+### Quick Commits 
+
+For quick commits, you can use the `-q` or `--quick` options to skip the
+preview and commit directly with the AI-generated message:
+
+```bash gc-smart --quick ```
+
+### Additional Options 
+
+The `gc-smart` script offers several options to customize the commit message
+generation process:
+
+- `-h`, `--help`: Display the help message with information about all available
+  options. 
+- `-i`, `--instruction`: Provide an instruction for the AI to guide the commit
+  message generation. 
+- `-s`, `--style`: Specify a style for the AI-generated commit message.
+  Available styles include imperative, detailed, simple, and conventional. 
+- `--keep-files`: Retain intermediate files created during the commit process
+  in the root directory of the repository. 
+- `--cmd`: Specify a custom command for Git operations. The default is 'git'. 
+
+To see all the possible options and get more detailed information, run:
+
+```bash 
+gc-smart --help 
+```
 
 ## Note on Commit Template Handling from gc-smart Version 0.4.0
 
@@ -259,6 +383,37 @@ After reviewing the proposed commit message, if you decide to proceed, this
 message will appear as a template in your default Git editor. You can then
 finalize the message or make any necessary modifications before committing the
 changes to your repository.
+
+## Acknowledgments
+
+The roots of this project stem from my personal journey exploring the
+possibilities of AI. While I've observed that AI has its limitations in
+implementing code, at least from my perspective, it can be very helpful for
+documentation purposes. This is an aspect of my workflow that I often found to
+be tortuous and time-consuming, especially when it comes to writing meaningful
+commit messages. Thus, I began using my own script for fine-tuning commit
+messages, which eventually led to the development of this project. It is
+designed to integrate AI assistance into my workflow as seamlessly as possible,
+without the need for copying diffs.
+
+The core design, architecture, and implementation of this project, as well as
+the selection of libraries, are the product of my initiative, borne out of
+personal experimentation and implementation. AI was partially considered for
+the implementation part, mainly in the integration of the OpenAI API within the
+Python script. AI was mainly utilized for documentation, commenting, and
+occasional troubleshooting. It proved particularly useful in ensuring clarity
+and coherence in the project documentation.
+
+While there might be other similar tools available, particularly those
+integrated into IDEs, they were not considered in the development of this
+project (at least not yet).
+
+The ShellCheck tool has been useful in analyzing and finding bugs in the
+shell scripts, helping to improve the overall implementation of the project.
+
+SmartCommit itself was used for creating the commit messages and the commit
+messages itself reflect also the changes within this project for the default
+commit style setup.
 
 ## License
 
