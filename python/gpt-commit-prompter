@@ -6,7 +6,7 @@
 ================================================================================
 
 Author(s) : David Schmid (david.schmid@mailbox.org)
-Version   : 0.2.1
+Version   : 0.3.0
 
 ------------------------------ Description -----------------------------------
 Utilizes OpenAI's GPT-3 model to auto-generate git commit messages from
@@ -15,7 +15,7 @@ employs GPT-3 to offer a summarized description and detailed bullet points.
 
 ------------------------------ Dependencies -----------------------------------
 - OpenAI Python SDK
-- Python 3.6 or higher
+- Python 3.7 or higher
 
 --------------------------------- Usage --------------------------------------
 Execute the script with changes in string format or by indicating a .diff file:
@@ -31,6 +31,8 @@ import argparse
 import json
 import os
 import openai
+
+from openai import OpenAI
 
 
 def load_config(file_path="../config.json"):
@@ -89,6 +91,32 @@ def get_changes(args):
     else:
         return args.changes
 
+# def generate_commit_message(changes, instruction, style="imperative"):
+#     config = load_config()
+#
+#     # Ensure the provided style is in the configuration
+#     if style not in config["style"]:
+#         raise ValueError(f"Style '{style}' not found in configuration.")
+#
+#     system_prompt = config["style"][style]["system_prompt"]
+#
+#     # Constructing the prompt for the AI
+#     prompt = f"{system_prompt}\n\nChanges:\n{changes}\n\n"
+#     if instruction:
+#         prompt += f"Instruction: {instruction}\n"
+#
+#     # Call the OpenAI API with the constructed prompt
+#     response = openai.Completion.create(
+#         engine="text-davinci-003",  # or another model of your choice
+#         prompt=prompt,
+#         max_tokens=150,  # Adjust as needed
+#         n=1,  # Number of completions to generate
+#         stop=None  # String where the API will stop generating further content
+#     )
+#
+#     # Extracting the commit message from the response
+#     commit_message = response.choices[0].text.strip()
+#     return commit_message
 
 def generate_commit_message(changes, instruction, style="imperative"):
     config = load_config()
@@ -99,25 +127,32 @@ def generate_commit_message(changes, instruction, style="imperative"):
 
     system_prompt = config["style"][style]["system_prompt"]
 
-    changes = "Write a git commit message for the following changes: \n\n" + changes
-
-    # Add the instruction to the AI messages
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": changes},
-    ]
-
+    # Constructing the prompt for the AI
+    prompt = f"{system_prompt}\n\nChanges:\n{changes}\n\n"
     if instruction:
-        messages.append({"role": "user", "content": instruction})
+        prompt += f"Instruction: {instruction}\n"
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages,  # type: ignore
+    # Instantiate the OpenAI client
+    client = OpenAI()
+
+    # Call the OpenAI API with the constructed prompt
+    response = client.chat.completions.create(
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ],
+        model="gpt-3.5-turbo", 
     )
 
-    commit_message = response.choices[0].message["content"]  # type: ignore
-    return commit_message
+    # Extracting the commit message from the response
+    commit_message = response.choices[0].message.content
+    if commit_message is not None:
+        commit_message = commit_message.strip()
+    else:
+        # Handle the case where commit_message is None
+        commit_message = "No commit message generated."
 
+    return commit_message
 
 def main():
     set_openai_key()

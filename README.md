@@ -30,7 +30,7 @@ possible options, run `gc-smart --help`.
 
 ## Prerequisites
 
-- Python 3.6 or higher
+- Python 3.7 or higher
 - An OpenAI API key, see: [Where do I find my Secret API Key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key)
 - Git installed on your system
 - Staged changes in the current repo to be commited
@@ -42,25 +42,18 @@ possible options, run `gc-smart --help`.
 
     ```bash
     git clone https://github.com/5n00py/SmartCommit.git
-    cd SmartCommit
     ```
 
-    Alternatively just copy the files `gc-smart` and `gpt-commit-prompter` to
-    the preferred location.
-    
 2. Install the necessary Python libraries:
 
     ```bash
-    pip install openai==0.28
+    cd SmartCommit/python
+    pip install -r requirements.txt
     ```
 
     If you want to isolate the libraries for this project, create a virtual
     environment, activate it and run the python script within the virtual
     environment.
-
-    Note: OpenAI released a new version of their API with significant changes.
-    The script will be upgraded in the future. For the moment pin the OpenAI
-    package to the older version 0.28.
 
 3. Set your OpenAI API key as an environment variable:
 
