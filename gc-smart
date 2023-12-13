@@ -26,6 +26,28 @@
 #
 # ==============================================================================
 
+# Ignoring false positives, see: https://github.com/koalaman/shellcheck/issues/2660
+# shellcheck disable=SC2317
+cleanup() {
+    # Check if the virtual environment is activated before deactivating
+    if [ -n "$VIRTUAL_ENV" ]; then
+        deactivate
+    fi
+
+    # Restore the original commit template
+    restore_original_commit_template
+
+    # Additional cleanup logic if needed
+    if ! $KEEP_FILES; then
+        rm -f "$GIT_ROOT/git_error.log"
+        rm -f "$GIT_ROOT/staged_changes.diff"
+        rm -f "$GIT_ROOT/tmp_commit_msg.txt"
+    fi
+}
+
+# Set trap to call cleanup function upon script exit
+trap cleanup EXIT
+
 # Determine the root directory of the gc-smart script
 GCS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -34,6 +56,7 @@ source "$GCS_ROOT/bash/arg-checks.sh"
 source "$GCS_ROOT/bash/help-message.sh"
 source "$GCS_ROOT/bash/error-handling.sh"
 source "$GCS_ROOT/bash/commit-preview-handler.sh"
+source "$GCS_ROOT/bash/template_handler.sh"
 
 # Set the git command, either default or as specified by the user
 set_git_cmd "$@"
@@ -56,7 +79,6 @@ fi
 # Check for staged changes, AI helper script, and commit template
 check_staged_changes
 check_ai_helper
-check_commit_template
 
 # Create a diff file of the staged changes
 $GIT_CMD diff --cached > "$GIT_ROOT/staged_changes.diff"
@@ -68,6 +90,9 @@ VENV_PATH="$GCS_ROOT/python/venv"
 # shellcheck disable=SC1091
 source "$VENV_PATH/bin/activate"
 
+# Backup existing commit template and set new one
+backup_and_set_commit_template
+
 # Generate the commit message using the AI helper
 generate_commit_message
 
@@ -76,20 +101,15 @@ if $PREVIEW; then
 	handle_preview
 fi
 
-# Commit the changes to the Git repository
-$GIT_CMD commit 2> "$GIT_ROOT/git_error.log"  # Redirect error messages to a log file
-
-# Check the result of the git commit operation
+# Commit the changes to the Git repository and check the result
 if ! $GIT_CMD commit 2> "$GIT_ROOT/git_error.log"; then
-    handle_git_commit_error  # Handle any commit errors
+    # Handle any commit errors
+    handle_git_commit_error
+else
+    # Indicate successful commit
+    echo "Commit successful."
 fi
 
-# Deactivate the virtual environment
-deactivate
-
-# Cleanup: Delete files unless the --keep-files flag is set
-if ! $KEEP_FILES; then
-    rm -f "$GIT_ROOT/git_error.log"  # Remove the error log file
-    rm -f "$GIT_ROOT/staged_changes.diff"  # Remove the staged changes diff file
-	rm -f "$GIT_ROOT/tmp_commit_msg.txt"  # Remove the temporary commit message file
-fi
+# Normal exit after successful execution.
+echo "Execution of gc-smart completed successfully."
+exit 0
