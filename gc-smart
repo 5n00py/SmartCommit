@@ -6,7 +6,7 @@
 #
 # Filename  : gc-smart
 # Author(s) : David Schmid (david.schmid@mailbox.org)
-# Version   : 0.4.0
+# Version   : 0.4.1
 #
 # ------------------------------ Description -----------------------------------
 # Leverages gpt-commit-prompter to auto-generate commit messages for staged
@@ -29,9 +29,15 @@
 # Ignoring false positives, see: https://github.com/koalaman/shellcheck/issues/2660
 # shellcheck disable=SC2317
 cleanup() {
-    # Check if the virtual environment is activated before deactivating
-    if [ -n "$VIRTUAL_ENV" ]; then
+    # Deactivate the script's virtual environment if it was activated
+    if [ -n "$VIRTUAL_ENV" ] && [ "$VIRTUAL_ENV" != "$original_venv" ]; then
         deactivate
+    fi
+
+    # Reactivate the original virtual environment if there was one
+    if [ -n "$original_venv" ] && [ "$VIRTUAL_ENV" != "$original_venv" ]; then
+        # shellcheck disable=SC1091
+		source "$original_venv/bin/activate"
     fi
 
     # Restore the original commit template
@@ -50,6 +56,12 @@ trap cleanup EXIT
 
 # Determine the root directory of the gc-smart script
 GCS_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Store the current virtual environment (if any)
+original_venv="$VIRTUAL_ENV"
+
+# Path to the virtual environment for the gpt-commit-prompter script
+VENV_PATH="$GCS_ROOT/python/venv"
 
 # Source additional script files for modular functionality
 source "$GCS_ROOT/bash/arg-checks.sh" 
@@ -82,9 +94,6 @@ check_ai_helper
 
 # Create a diff file of the staged changes
 $GIT_CMD diff --cached > "$GIT_ROOT/staged_changes.diff"
-
-# Path to the virtual environment for the gpt-commit-prompter script
-VENV_PATH="$GCS_ROOT/python/venv"
 
 # Activate the virtual environment
 # shellcheck disable=SC1091
