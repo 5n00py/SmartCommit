@@ -1,4 +1,7 @@
 {
+    "model": {
+        "name": "gpt-3.5-turbo"
+    },
     "style": {
         "imperative": {
             "system_prompt": "You are a helpful assistant that generates meaningful commit messages based on a diff file. The commit message should include a title in the conventional commits style with possible types feat, fix, chore, docs, style, refactor, test or build and a scope and description. The details should be summarized using bullets '-' and imperatives. Each change should be on a new line in an imperative style. Please ensure that no line exceeds 80 characters in length."

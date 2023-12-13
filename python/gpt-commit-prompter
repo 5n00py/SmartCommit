@@ -6,15 +6,16 @@
 ================================================================================
 
 Author(s) : David Schmid (david.schmid@mailbox.org)
-Version   : 0.3.0
+Version   : 0.4.0
 
 ------------------------------ Description -----------------------------------
-Utilizes OpenAI's GPT-3 model to auto-generate git commit messages from
-provided changes. Accepts changes as string input or from a .diff file, then
-employs GPT-3 to offer a summarized description and detailed bullet points.
+Utilizes pre-configured OpenAI GPT model to auto-generate git commit messages
+from provided changes. Accepts changes as string input or from a .diff file,
+then employs GPT-3 to offer a summarized description and detailed bullet
+points.
 
 ------------------------------ Dependencies -----------------------------------
-- OpenAI Python SDK
+- OpenAI Python API
 - Python 3.7 or higher
 
 --------------------------------- Usage --------------------------------------
@@ -35,13 +36,25 @@ import openai
 from openai import OpenAI
 
 
-def load_config(file_path="../config.json"):
-    # Determine the directory where this script is located.
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    # Construct the full path to the config.json file.
-    full_path = os.path.join(dir_path, file_path)
+def load_config():
+    # Hardcoded default path relative to the script location
+    default_file_path = "../config.json"
 
-    with open(full_path, "r") as f:
+    # Path to the prioritized config file in the user's home directory
+    home_dir = os.path.expanduser("~")
+    prioritized_config_path = os.path.join(home_dir, ".config/SmartCommit/config.json")
+
+    # Check if the prioritized config file exists
+    if os.path.isfile(prioritized_config_path):
+        config_path = prioritized_config_path
+    else:
+        # Determine the directory where this script is located.
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        # Construct the full path to the default config.json file.
+        config_path = os.path.join(dir_path, default_file_path)
+
+    # Load and return the configuration
+    with open(config_path, "r") as f:
         return json.load(f)
 
 
@@ -91,33 +104,6 @@ def get_changes(args):
     else:
         return args.changes
 
-# def generate_commit_message(changes, instruction, style="imperative"):
-#     config = load_config()
-#
-#     # Ensure the provided style is in the configuration
-#     if style not in config["style"]:
-#         raise ValueError(f"Style '{style}' not found in configuration.")
-#
-#     system_prompt = config["style"][style]["system_prompt"]
-#
-#     # Constructing the prompt for the AI
-#     prompt = f"{system_prompt}\n\nChanges:\n{changes}\n\n"
-#     if instruction:
-#         prompt += f"Instruction: {instruction}\n"
-#
-#     # Call the OpenAI API with the constructed prompt
-#     response = openai.Completion.create(
-#         engine="text-davinci-003",  # or another model of your choice
-#         prompt=prompt,
-#         max_tokens=150,  # Adjust as needed
-#         n=1,  # Number of completions to generate
-#         stop=None  # String where the API will stop generating further content
-#     )
-#
-#     # Extracting the commit message from the response
-#     commit_message = response.choices[0].text.strip()
-#     return commit_message
-
 def generate_commit_message(changes, instruction, style="imperative"):
     config = load_config()
 
@@ -135,13 +121,20 @@ def generate_commit_message(changes, instruction, style="imperative"):
     # Instantiate the OpenAI client
     client = OpenAI()
 
+    # Get the model name from the configuration
+    model_config = config.get("model")
+    if not model_config or "name" not in model_config:
+        raise ValueError("Model configuration not found in config.json")
+
+    model_name = model_config["name"]
+
     # Call the OpenAI API with the constructed prompt
     response = client.chat.completions.create(
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt}
         ],
-        model="gpt-3.5-turbo", 
+        model=model_name, 
     )
 
     # Extracting the commit message from the response
