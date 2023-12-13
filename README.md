@@ -20,6 +20,25 @@ line. Its functionality and commands are tailored to these systems and
 workflows and might not be fully compatible or perform as expected in other
 environments.
 
+## Table of Contents
+
+- [SmartCommit](#smartcommit)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+   - [Manual Installation](#manual-installation)
+   - [Using the Setup Script](#using-the-setup-script)
+   - [Quick Setup with One-Liner](#quick-setup-with-one-liner)
+- [Configuration](#configuration)
+   - [Commit Message Style](#commit-message-style)
+   - [GPT Model Configuration](#gpt-model-configuration)
+- [Usage](#usage)
+   - [Basic Workflow](#basic-workflow)
+   - [Quick Commits](#quick-commits)
+   - [Additional Options](#additional-options)
+- [Note on Commit Template Handling](#note-on-commit-template-handling-from-gc-smart-version-040)
+- [Examples](#examples)
+- [License](#license)
+
 ## Prerequisites
 
 - Python 3.7 or higher
