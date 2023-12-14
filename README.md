@@ -24,9 +24,9 @@ environments.
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-   - [Manual Installation](#manual-installation)
-   - [Using the Setup Script](#using-the-setup-script)
    - [Quick Setup with One-Liner](#quick-setup-with-one-liner)
+   - [Using the Setup Script](#using-the-setup-script)
+   - [Manual Installation](#manual-installation)
 - [Configuration](#configuration)
    - [Commit Message Style](#commit-message-style)
    - [GPT Model Configuration](#gpt-model-configuration)
@@ -41,13 +41,83 @@ environments.
 
 ## Prerequisites
 
-- Python 3.7 or higher
-- An OpenAI API key, see: [Where do I find my Secret API Key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key)
-- Git installed on your system
-- Staged changes in the current repo to be commited
-- `tmp_commit_msg.txt` has to be configured as commit template (see below)
+Before you begin with SmartCommit, ensure you have the following prerequisites
+set up:
+
+- **Python 3.7 or higher**: This is the core language used for accessing the
+  OpenAI API. To check your current Python version, use `python3 --version`.
+  Python 3.11 is recommended for the best compatibility and performance. You
+  can download it from the [Python Download
+  Site](https://www.python.org/downloads/) or use your operating system's
+  package manager for installation.
+
+- **Python venv**: This module is crucial for creating an isolated Python
+  environment, which is necessary for the proper functioning of SmartCommit.
+  It's usually included with Python 3.7 and later. To verify if it's installed,
+  run `python3 -m venv --help`. If you're using a Debian-based system and it's
+  not installed, you can install it with `sudo apt install python3.x-venv`,
+  replacing x with your Python 3 version number. For other systems, please
+  consult the relevant documentation or package manager.
+
+- **OpenAI API Key**: Essential for accessing the OpenAI API functionalities.
+  You can obtain your API key following [Where do I find my Secret API
+  Key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key)
+
+- **Git**: Make sure Git is installed on your system, as SmartCommit integrates with
+it for version control. If you need to install or update Git, visit [Git's
+official site](https://git-scm.com/downloads) or consult your package manager.
+
+- **Staged Changes in Your Repository**: `gc-smart` is designed to generate
+  commit messages based on the changes staged in your Git repository. Ensure
+  you have changes staged for commit before using the script.
 
 ## Installation
+
+### Quick Setup with One-Liner
+
+For a quick setup you can use a one-liner that clones the repository into
+`~/.local/share/SmartCommit` and then runs the setup script. Make sure you have
+Python 3.7 or higher and venv installed and run:
+
+```bash bash <(curl -sL
+https://raw.githubusercontent.com/5n00py/SmartCommit/main/setup/setup_quick_wget.sh)
+```
+
+Upon completion don't forget to restart or source your shell configuration as
+described under 6. in the Manuall Installation section above.
+
+### Using the Setup Script
+
+For an automated setup process after cloning, you can use the
+[setup_sc.sh](setup/setup_sc.sh) script located in the `setup` directory. This
+will set up the Python environment, install necessary dependencies, configure
+the OpenAI API key and update the shell's configuration.
+
+**Note:** If the `OPENAI_API_KEY` environment variable is not already set, the
+script will prompt you to enter an OpenAI API key. You will need to paste the
+key at the prompt, so make sure you have it ready, see also
+[Where do I find my API key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key).
+
+1. Clone the Repository as described in the first step of the Manual
+   Installation.
+
+2. Navigate to the setup directory, make the script executable and run it:
+
+  ```bash
+  cd SmartCommit/setup && chmod +x setup_sc.sh && ./setup_sc.sh
+  ```
+
+  The script will perform several actions:
+  - Create and set up a virtual environment for Python
+  - Check if Python version is 3.7 or higher
+  - Install requiret python libraries in the venv
+  - Prompt for adding an `OPENAI_API_KEY` and adding it to `.bashrc` or
+    `.zshrc` if they exist.
+  - Add `gc-smart` script to the shell's PATH environment variable.
+  - Make the necessary scripts executable.
+
+3. Restart or source your shell configuration as descripted under 6. in the
+   Manual Installation above.
 
 ### Manual Installation
 
@@ -144,51 +214,6 @@ environments.
    ```bash
    source ~/.zshrc
    ```
-
-### Using the Setup Script
-
-For a more automated setup process, you can use the
-[setup_sc.sh](setup/setup_sc.sh) script located in the `setup` directory. This
-will set up the Python environment, install necessary dependencies, configure
-the OpenAI API key and update the shell's configuration.
-
-**Note:** If the `OPENAI_API_KEY` environment variable is not already set, the
-script will prompt you to enter an OpenAI API key. You will need to paste the
-key at the prompt, so make sure you have it ready, see also
-[Where do I find my API key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-api-key).
-
-1. Clone the Repository as described in the first step of the Manual
-   Installation.
-
-2. Navigate to the setup directory, make the script executable and run it:
-
-  ```bash
-  cd SmartCommit/setup && chmod +x setup_sc.sh && ./setup_sc.sh
-  ```
-
-  The script will perform several actions:
-  - Create and set up a virtual environment for Python
-  - Check if Python version is 3.7 or higher
-  - Install requiret python libraries in the venv
-  - Prompt for adding an `OPENAI_API_KEY` and adding it to `.bashrc` or
-    `.zshrc` if they exist.
-  - Add `gc-smart` script to the shell's PATH environment variable.
-  - Make the necessary scripts executable.
-
-3. Restart or source your shell configuration as descripted under 6. in the
-   Manual Installation above.
-
-### Quick Setup with One-Liner
-
-For an even swifter setup you can use a one-liner that clones the repository
-into `~/.local/share/SmartCommit` and then runs the setup script:
-
-```bash
-bash <(curl -sL https://raw.githubusercontent.com/5n00py/SmartCommit/main/setup/setup_quick_wget.sh)
-```
-
-Upon completion don't forget to restart or source your shell configuration as
-described under 6. in the Manuall Installation section above.
 
 ## Configuration
 
