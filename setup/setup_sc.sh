@@ -19,7 +19,31 @@ minimum_version="3.7"
 if printf '%s\n' "$python_version" "$minimum_version" | sort -V | head -n 1 | grep -q "$minimum_version"; then
     echo "Python version is $python_version, which is acceptable."
 else
-    echo "Python 3.7 or higher is required. Please upgrade your Python."
+    echo "Python 3.7 or higher is required."
+    echo "To install Python 3.11, you can typically use the following commands:"
+    echo "sudo apt-get update"
+    echo "sudo apt-get install python3.11"
+    echo "If you're not using a Debian-based system, please check your"
+	echo "distribution's package manager or visit the Python website for"
+	echo "installation instructions."
+    echo "After installing Python 3.11, please rerun this setup script:"
+    echo "$GCS_ROOT/setup/setup_sc.sh"
+    exit 1
+fi
+
+# Check if Python venv is installed
+if ! python3 -m venv --help > /dev/null 2>&1; then
+    echo "The Python venv module is not installed."
+    echo "Please install the Python venv module for your Python version."
+    echo "For Python 3.x, you can typically install it using:"
+    echo "sudo apt-get install python3.x-venv"
+    echo "Replace 'x' with your Python 3 version number."
+	echo "If you're not using a Debian-based system, please check your"
+	echo "distribution's package manager or visit the Python website for"
+	echo "installation instructions."
+    echo "After installing the venv module, please restart this setup script:"
+    echo "$GCS_ROOT/setup/setup_sc.sh"
+    
     exit 1
 fi
 
