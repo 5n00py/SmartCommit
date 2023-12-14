@@ -85,15 +85,16 @@ if [ -z "$OPENAI_API_KEY" ]; then
     echo "WARNING: Keep your API key secure and do not share it."
 fi
 
-# Add script to PATH
-echo "Adding gc-smart script to PATH..."
-script_path="$GCS_ROOT/gc-smart"
+# Add script directory to PATH
+echo "Adding SmartCommit directory to PATH..."
+script_dir="$GCS_ROOT"
 if [ -f "$HOME/.bashrc" ]; then
-    echo "export PATH=\"\$PATH:$script_path\"" >> "$HOME/.bashrc"
+    echo "export PATH=\"\$PATH:$script_dir\"" >> "$HOME/.bashrc"
+    echo "SmartCommit directory added to .bashrc PATH"
 fi
 if [ -f "$HOME/.zshrc" ]; then
-    echo "export PATH=\"\$PATH:$script_path\"" >> "$HOME/.zshrc"
+    echo "export PATH=\"\$PATH:$script_dir\"" >> "$HOME/.zshrc"
+    echo "SmartCommit directory added to .zshrc PATH"
 fi
-
 
 echo "Setup complete. Please restart your terminal or source your .bashrc/.zshrc file."
