@@ -79,8 +79,8 @@ For a quick setup you can use a one-liner that clones the repository into
 `~/.local/share/SmartCommit` and then runs the setup script. Make sure you have
 Python 3.7 or higher and venv installed and run:
 
-```bash bash <(curl -sL
-https://raw.githubusercontent.com/5n00py/SmartCommit/main/setup/setup_quick_wget.sh)
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/5n00py/SmartCommit/main/setup/setup_quick_wget.sh)
 ```
 
 Upon completion don't forget to restart or source your shell configuration as
