@@ -8,9 +8,23 @@ echo "Setting GCS_ROOT to $GCS_ROOT"
 
 # Set up Python environment
 echo "Setting up the Python environment..."
-python3 -m venv "$GCS_ROOT/python/venv"
-# shellcheck disable=SC1091
-source "$GCS_ROOT/python/venv/bin/activate"
+if ! python3 -m venv "$GCS_ROOT/python/venv"; then
+    echo "Failed to create a Python virtual environment. This could mean that"
+	echo "the Python venv module is not installed."
+    echo "Please install the Python venv module for your Python version."
+    echo "For Python 3.x, you can typically install it on Debian-based systems using:"
+    echo "sudo apt-get install python3.x-venv"
+    echo "Replace 'x' with your Python 3 version number."
+    echo "If you're not using a Debian-based system, please check your"
+    echo "distribution's package manager or visit the Python website for"
+    echo "installation instructions."
+    echo "After installing the venv module, please restart this setup script:"
+    echo "$GCS_ROOT/setup/setup_sc.sh"
+    exit 1
+else
+    # shellcheck disable=SC1091
+    source "$GCS_ROOT/python/venv/bin/activate"
+fi
 
 # Check Python version
 python_version=$(python3 --version | cut -d ' ' -f 2)
@@ -28,22 +42,6 @@ else
 	echo "installation instructions."
     echo "After installing Python 3.11, please rerun this setup script:"
     echo "$GCS_ROOT/setup/setup_sc.sh"
-    exit 1
-fi
-
-# Check if Python venv is installed
-if ! python3 -m venv --help > /dev/null 2>&1; then
-    echo "The Python venv module is not installed."
-    echo "Please install the Python venv module for your Python version."
-    echo "For Python 3.x, you can typically install it using:"
-    echo "sudo apt-get install python3.x-venv"
-    echo "Replace 'x' with your Python 3 version number."
-	echo "If you're not using a Debian-based system, please check your"
-	echo "distribution's package manager or visit the Python website for"
-	echo "installation instructions."
-    echo "After installing the venv module, please restart this setup script:"
-    echo "$GCS_ROOT/setup/setup_sc.sh"
-    
     exit 1
 fi
 
