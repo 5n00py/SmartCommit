@@ -22,6 +22,7 @@ environments.
 
 ## Table of Contents
 
+- [Preview](#preview)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
    - [Quick Setup with One-Liner](#quick-setup-with-one-liner)
@@ -34,10 +35,13 @@ environments.
    - [Basic Workflow](#basic-workflow)
    - [Quick Commits](#quick-commits)
    - [Additional Options](#additional-options)
-- [Note on Commit Template Handling](#note-on-commit-template-handling-from-gc-smart-version-040)
 - [Examples](#examples)
 - [Acknowledgments](#acknowledgments)
 - [License](#license)
+
+## Preview
+
+![gc-smart Preview](preview/preview-gc-smart.gif)
 
 ## Prerequisites
 
@@ -123,8 +127,16 @@ key at the prompt, so make sure you have it ready, see also
 
 1. Clone this repository to your local machine using git:
 
+    Using HTTPS:
+
     ```bash
     git clone https://github.com/5n00py/SmartCommit.git
+    ```
+
+    Using SSH:
+
+    ```bash
+    git clone git@github.com:5n00py/SmartCommit.git
     ```
 
 2. Setting up the Python Environment:
@@ -333,24 +345,6 @@ To see all the possible options and get more detailed information, run:
 ```bash 
 gc-smart --help 
 ```
-
-## Note on Commit Template Handling from gc-smart Version 0.4.0
-
-Starting from version 0.4.0 of `gc-smart`, there is no longer a need to
-manually set `tmp_commit_msg.txt` as the global commit template in your Git
-configuration. The script has been updated to automatically handle the commit
-template for you.
-
-When you run `gc-smart`, it will now:
-
-1. Temporarily back up any existing Git commit template you have configured. 
-2. Set `tmp_commit_msg.txt` as the commit template for the duration of its
-   execution.
-3. Once the script completes or exits, it will restore your original commit
-   template. 
-
-This improvement ensures to maintain your existing Git configurations while
-gc-smart is in operation.
 
 ## Examples
 
